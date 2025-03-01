@@ -1,164 +1,192 @@
 
-import { useState, useCallback, useRef } from "react";
-import ReactFlow, {
+import { useState, useCallback, useMemo } from 'react';
+import { 
+  ReactFlow, 
+  MiniMap, 
+  Controls, 
   Background,
-  Controls,
-  Connection,
-  Edge,
-  NodeTypes,
   useNodesState,
   useEdgesState,
   addEdge,
+  Connection,
+  Edge,
   Panel,
-  MarkerType,
-  ReactFlowProvider,
-  NodeDragHandler,
-  Node
-} from "@xyflow/react";
-import "@xyflow/react/dist/style.css";
+  MarkerType
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+import { initialNodes, initialEdges } from './storyFlowData';
+import StoryNode from './nodes/StoryNode';
+import StoryNodeMenu from './StoryNodeMenu';
+import { Button } from '@/components/ui/button';
+import { Plus, Save, ZoomIn, ZoomOut } from 'lucide-react';
 
-import StoryNode from "./nodes/StoryNode";
-import StoryNodeMenu from "./StoryNodeMenu";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { generateNodeId, initialNodes, initialEdges } from "./storyFlowData";
-
-const nodeTypes: NodeTypes = {
+const nodeTypes = {
   storyNode: StoryNode,
 };
 
 const StoryFlowEditor = () => {
-  const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
-  const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
-
-  const onConnect = useCallback((params: Connection) => {
-    setEdges((eds) => 
-      addEdge({ 
-        ...params, 
-        animated: true,
-        style: { strokeWidth: 2 },
-        markerEnd: { type: MarkerType.ArrowClosed }
-      }, eds)
-    );
-  }, [setEdges]);
-
-  const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
+  const [selectedNode, setSelectedNode] = useState(null);
+  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
+  const [showMenu, setShowMenu] = useState(false);
+  
+  // Handle node selection
+  const onNodeClick = useCallback((event, node) => {
     setSelectedNode(node);
   }, []);
-
-  const onDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+  
+  // Handle edge creation
+  const onConnect = useCallback((params) => {
+    const newEdge = {
+      ...params,
+      type: 'smoothstep',
+      animated: true,
+      style: { stroke: '#555' },
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+      },
+    };
+    setEdges((eds) => addEdge(newEdge, eds));
+  }, [setEdges]);
+  
+  // Handle background click to add a new node
+  const onPaneClick = useCallback((event) => {
+    // Clear selection
+    setSelectedNode(null);
+    setShowMenu(false);
+  }, []);
+  
+  // Handle right-click to show context menu
+  const onPaneContextMenu = useCallback((event) => {
+    // Prevent default context menu
     event.preventDefault();
-    event.dataTransfer.dropEffect = "move";
+    
+    // Get the position relative to the pane
+    const reactFlowBounds = event.currentTarget.getBoundingClientRect();
+    const position = {
+      x: event.clientX - reactFlowBounds.left,
+      y: event.clientY - reactFlowBounds.top,
+    };
+    
+    setMenuPosition(position);
+    setShowMenu(true);
   }, []);
-
-  const onDrop = useCallback(
-    (event: React.DragEvent<HTMLDivElement>) => {
-      event.preventDefault();
-
-      const reactFlowBounds = reactFlowWrapper.current?.getBoundingClientRect();
-      const type = event.dataTransfer.getData("application/reactflow/type");
-      const phaseType = event.dataTransfer.getData("application/reactflow/phase");
-
-      if (!reactFlowBounds || !type || !reactFlowInstance) {
-        return;
-      }
-
-      const position = reactFlowInstance.screenToFlowPosition({
-        x: event.clientX - reactFlowBounds.left,
-        y: event.clientY - reactFlowBounds.top,
-      });
-
-      const newNode = {
-        id: generateNodeId(),
-        type,
-        position,
-        data: { 
-          label: `${phaseType} ノード`, 
-          description: "ここをクリックして編集",
-          phase: phaseType
-        },
-      };
-
-      setNodes((nds) => nds.concat(newNode));
-    },
-    [reactFlowInstance, setNodes],
-  );
-
-  const onNodeDragStart: NodeDragHandler = useCallback(() => {
-    // If we're dragging a node, we want to hide the panel
-    setSelectedNode(null);
-  }, []);
-
-  const onPaneClick = useCallback(() => {
-    setSelectedNode(null);
-  }, []);
-
+  
+  // Add a new node at the clicked position
+  const addNewNode = useCallback((type = '起') => {
+    const newNode = {
+      id: `node_${Date.now()}`,
+      type: 'storyNode',
+      position: menuPosition,
+      data: { 
+        label: '新しいシーン', 
+        type: type,
+        description: '',
+        characters: [],
+        notes: ''
+      },
+    };
+    
+    setNodes((nds) => [...nds, newNode]);
+    setShowMenu(false);
+  }, [menuPosition, setNodes]);
+  
+  // Get the flow style
+  const flowStyle = {
+    background: '#f8f9fa',
+    width: '100%',
+    height: '100%',
+  };
+  
   return (
-    <div className="w-full h-full" ref={reactFlowWrapper}>
-      <ReactFlowProvider>
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onInit={setReactFlowInstance}
-          onDrop={onDrop}
-          onDragOver={onDragOver}
-          onNodeClick={onNodeClick}
-          onNodeDragStart={onNodeDragStart}
-          onPaneClick={onPaneClick}
-          nodeTypes={nodeTypes}
-          fitView
-          fitViewOptions={{ padding: 0.2 }}
-          minZoom={0.5}
-          maxZoom={2}
-          defaultViewport={{ x: 0, y: 0, zoom: 1 }}
-        >
-          <Controls />
-          <Background gap={16} size={1} />
-          
-          <Panel position="top-left" className="bg-white/80 backdrop-blur-sm p-3 rounded-lg shadow-sm border border-gray-200 animate-fade-in">
-            <div className="font-medium mb-2 text-sm text-gray-700">ストーリー要素を追加</div>
-            <StoryNodeMenu />
-          </Panel>
-          
-          <Panel position="bottom-right" className="m-6">
-            <Button size="sm" className="rounded-full shadow-md">
-              <Plus size={16} className="mr-1" />
-              新規ノード
-            </Button>
-          </Panel>
-        </ReactFlow>
-      </ReactFlowProvider>
+    <div style={{ width: '100%', height: '100%' }}>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        onNodeClick={onNodeClick}
+        onPaneClick={onPaneClick}
+        onPaneContextMenu={onPaneContextMenu}
+        nodeTypes={nodeTypes}
+        fitView
+        fitViewOptions={{ padding: 0.2 }}
+        style={flowStyle}
+        defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+      >
+        <Controls />
+        <MiniMap 
+          nodeStrokeWidth={3}
+          zoomable
+          pannable
+        />
+        <Background
+          variant="dots"
+          gap={12}
+          size={1}
+        />
+        
+        <Panel position="top-right" className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => addNewNode('起')}>
+            <Plus className="h-4 w-4 mr-1" />
+            新シーン
+          </Button>
+          <Button size="sm" variant="outline">
+            <Save className="h-4 w-4 mr-1" />
+            保存
+          </Button>
+        </Panel>
+        
+        {showMenu && (
+          <StoryNodeMenu 
+            position={menuPosition}
+            onSelect={addNewNode}
+            onClose={() => setShowMenu(false)}
+          />
+        )}
+      </ReactFlow>
       
       {selectedNode && (
-        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[600px] max-w-full mb-6 bg-white/90 backdrop-blur-md shadow-lg border border-gray-200 rounded-lg p-4 animate-slide-in">
-          <h3 className="font-medium mb-2">{selectedNode.data.label}</h3>
-          <textarea
-            className="w-full h-24 p-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20"
-            defaultValue={selectedNode.data.description}
-            placeholder="このシーンの詳細を入力..."
-            onChange={(e) => {
-              setNodes((nds) =>
-                nds.map((node) => {
-                  if (node.id === selectedNode.id) {
-                    return {
-                      ...node,
-                      data: {
-                        ...node.data,
-                        description: e.target.value,
-                      },
-                    };
-                  }
-                  return node;
-                })
-              );
-            }}
-          />
+        <div className="absolute bottom-0 left-0 right-0 bg-white border-t p-4 h-[30%] overflow-auto">
+          <h3 className="font-medium text-lg mb-2">{selectedNode.data.label}</h3>
+          <p className="text-gray-500 text-sm mb-4">シーンの詳細情報やメモを編集できます</p>
+          
+          <div className="flex flex-col space-y-2">
+            <input
+              type="text"
+              value={selectedNode.data.label}
+              onChange={(e) => {
+                const newLabel = e.target.value;
+                setNodes((nds) =>
+                  nds.map((node) =>
+                    node.id === selectedNode.id
+                      ? { ...node, data: { ...node.data, label: newLabel } }
+                      : node
+                  )
+                );
+              }}
+              className="border rounded p-2"
+              placeholder="シーンのタイトル"
+            />
+            
+            <textarea
+              value={selectedNode.data.description || ''}
+              onChange={(e) => {
+                const newDesc = e.target.value;
+                setNodes((nds) =>
+                  nds.map((node) =>
+                    node.id === selectedNode.id
+                      ? { ...node, data: { ...node.data, description: newDesc } }
+                      : node
+                  )
+                );
+              }}
+              className="border rounded p-2 h-20"
+              placeholder="シーンの説明"
+            />
+          </div>
         </div>
       )}
     </div>
