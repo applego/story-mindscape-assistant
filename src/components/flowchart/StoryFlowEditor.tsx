@@ -11,7 +11,8 @@ import {
   Connection,
   Edge,
   Panel,
-  MarkerType
+  MarkerType,
+  BackgroundVariant
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { initialNodes, initialEdges } from './storyFlowData';
@@ -84,7 +85,8 @@ const StoryFlowEditor = () => {
         type: type,
         description: '',
         characters: [],
-        notes: ''
+        notes: '',
+        phase: type === '起' ? 'ki' : type === '承' ? 'sho' : type === '転' ? 'ten' : 'ketsu'
       },
     };
     
@@ -123,7 +125,7 @@ const StoryFlowEditor = () => {
           pannable
         />
         <Background
-          variant="dots"
+          variant="dots" as BackgroundVariant
           gap={12}
           size={1}
         />
@@ -140,11 +142,26 @@ const StoryFlowEditor = () => {
         </Panel>
         
         {showMenu && (
-          <StoryNodeMenu 
-            position={menuPosition}
-            onSelect={addNewNode}
-            onClose={() => setShowMenu(false)}
-          />
+          <div
+            style={{
+              position: 'absolute',
+              left: menuPosition.x,
+              top: menuPosition.y,
+              zIndex: 10,
+              backgroundColor: 'white',
+              padding: '10px',
+              borderRadius: '5px',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.2)'
+            }}
+          >
+            <div className="flex flex-col gap-2">
+              <Button size="sm" onClick={() => addNewNode('起')}>起：序章</Button>
+              <Button size="sm" onClick={() => addNewNode('承')}>承：展開</Button>
+              <Button size="sm" onClick={() => addNewNode('転')}>転：山場</Button>
+              <Button size="sm" onClick={() => addNewNode('結')}>結：結末</Button>
+              <Button size="sm" variant="outline" onClick={() => setShowMenu(false)}>閉じる</Button>
+            </div>
+          </div>
         )}
       </ReactFlow>
       
