@@ -125,7 +125,7 @@ const StoryFlowEditor = () => {
           pannable
         />
         <Background
-          variant="dots" as BackgroundVariant
+          variant={BackgroundVariant.Dots}
           gap={12}
           size={1}
         />
