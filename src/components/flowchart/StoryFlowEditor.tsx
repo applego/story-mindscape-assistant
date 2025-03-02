@@ -12,7 +12,8 @@ import {
   BackgroundVariant,
   useReactFlow,
   Node,
-  NodeMouseHandler
+  NodeMouseHandler,
+  ReactFlowProvider
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { initialNodes, initialEdges } from './storyFlowData';
@@ -37,7 +38,7 @@ const nodeTypes = {
   storyNode: StoryNode,
 };
 
-const StoryFlowEditor = () => {
+const StoryFlowEditorContent = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState<Node<StoryNodeData> | null>(null);
@@ -47,12 +48,10 @@ const StoryFlowEditor = () => {
   
   const reactFlowInstance = useReactFlow();
   
-  // Handle node selection
   const onNodeClick: NodeMouseHandler = useCallback((event, node) => {
     setSelectedNode(node as Node<StoryNodeData>);
   }, []);
   
-  // Handle edge creation
   const onConnect = useCallback((params) => {
     const newEdge = {
       ...params,
@@ -67,23 +66,17 @@ const StoryFlowEditor = () => {
     toast.success('シーン間の接続を作成しました');
   }, [setEdges]);
   
-  // Handle background click
   const onPaneClick = useCallback((event) => {
-    // 右クリックメニューが表示されている場合は非表示にする
     if (showMenu) {
       setShowMenu(false);
       return;
     }
-    // 通常のクリックでは選択解除する
     setSelectedNode(null);
   }, [showMenu]);
   
-  // Handle right-click for context menu
   const onPaneContextMenu = useCallback((event) => {
-    // デフォルトのコンテキストメニューを表示しない
     event.preventDefault();
     
-    // パネルに対する相対位置を取得
     const reactFlowBounds = event.currentTarget.getBoundingClientRect();
     const position = {
       x: event.clientX - reactFlowBounds.left,
@@ -94,7 +87,6 @@ const StoryFlowEditor = () => {
     setShowMenu(true);
   }, []);
   
-  // Add a new node at the clicked position
   const addNewNode = useCallback((phase = 'ki') => {
     const newNode: Node<StoryNodeData> = {
       id: `node_${Date.now()}`,
@@ -117,7 +109,6 @@ const StoryFlowEditor = () => {
     toast.success('新しいシーンを作成しました');
   }, [menuPosition, setNodes]);
   
-  // Update node data
   const handleNodeUpdate = useCallback((nodeId: string, newData: Partial<StoryNodeData>) => {
     setNodes((nds) =>
       nds.map((node) =>
@@ -126,7 +117,6 @@ const StoryFlowEditor = () => {
     );
   }, [setNodes]);
   
-  // Delete selected node
   const deleteSelectedNode = useCallback(() => {
     if (!selectedNode) return;
     
@@ -140,14 +130,12 @@ const StoryFlowEditor = () => {
     toast.success('シーンを削除しました');
   }, [selectedNode, setNodes, setEdges]);
   
-  // Save the current flow
   const saveFlow = useCallback(() => {
     const flow = reactFlowInstance.toObject();
     localStorage.setItem('storyflow', JSON.stringify(flow));
     toast.success('ストーリーフローを保存しました');
   }, [reactFlowInstance]);
   
-  // Load the saved flow
   const loadSavedFlow = useCallback(() => {
     const savedFlow = localStorage.getItem('storyflow');
     if (savedFlow) {
@@ -266,6 +254,14 @@ const StoryFlowEditor = () => {
         selectedNodeId={selectedNode?.id || null}
       />
     </div>
+  );
+};
+
+const StoryFlowEditor = () => {
+  return (
+    <ReactFlowProvider>
+      <StoryFlowEditorContent />
+    </ReactFlowProvider>
   );
 };
 
