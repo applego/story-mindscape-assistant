@@ -16,7 +16,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { initialNodes, initialEdges } from './storyFlowData';
-import StoryNode from './nodes/StoryNode';
+import StoryNode, { StoryNodeData } from './nodes/StoryNode';
 import FlowAIAssistant from './FlowAIAssistant';
 import NodeDetailPanel from './NodeDetailPanel';
 import { nodeTypeColors } from './storyFlowStyles';
@@ -40,7 +40,7 @@ const nodeTypes = {
 const StoryFlowEditor = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [selectedNode, setSelectedNode] = useState<Node<StoryNodeData> | null>(null);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
   const [showMenu, setShowMenu] = useState(false);
   const [showAIAssistant, setShowAIAssistant] = useState(false);
@@ -48,7 +48,7 @@ const StoryFlowEditor = () => {
   const reactFlowInstance = useReactFlow();
   
   // Handle node selection
-  const onNodeClick = useCallback((event, node) => {
+  const onNodeClick = useCallback((event, node: Node<StoryNodeData>) => {
     setSelectedNode(node);
   }, []);
   
@@ -105,9 +105,12 @@ const StoryFlowEditor = () => {
         type: phase === 'ki' ? '起' : phase === 'sho' ? '承' : phase === 'ten' ? '転' : '結',
         description: '',
         characters: [],
+        title: '新しいシーン',
+        content: '',
+        tags: [],
         notes: '',
         phase: phase
-      },
+      } as StoryNodeData,
     };
     
     setNodes((nds) => [...nds, newNode]);
@@ -116,7 +119,7 @@ const StoryFlowEditor = () => {
   }, [menuPosition, setNodes]);
   
   // Update node data
-  const handleNodeUpdate = useCallback((nodeId, newData) => {
+  const handleNodeUpdate = useCallback((nodeId: string, newData: Partial<StoryNodeData>) => {
     setNodes((nds) =>
       nds.map((node) =>
         node.id === nodeId ? { ...node, data: { ...node.data, ...newData } } : node

@@ -21,8 +21,8 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
 
   useEffect(() => {
     if (selectedNode) {
-      setTitle(selectedNode.data.title || '');
-      setContent(selectedNode.data.content || '');
+      setTitle(selectedNode.data.title || selectedNode.data.label || '');
+      setContent(selectedNode.data.content || selectedNode.data.description || '');
       setTags(selectedNode.data.tags || []);
     }
   }, [selectedNode]);
@@ -30,14 +30,20 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
     if (selectedNode) {
-      onNodeUpdate(selectedNode.id, { title: e.target.value });
+      onNodeUpdate(selectedNode.id, { 
+        title: e.target.value,
+        label: e.target.value // Update label as well to maintain compatibility
+      });
     }
   };
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value);
     if (selectedNode) {
-      onNodeUpdate(selectedNode.id, { content: e.target.value });
+      onNodeUpdate(selectedNode.id, { 
+        content: e.target.value,
+        description: e.target.value // Update description as well to maintain compatibility
+      });
     }
   };
 

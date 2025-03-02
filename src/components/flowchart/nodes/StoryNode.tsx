@@ -9,6 +9,9 @@ export interface StoryNodeData {
   description: string;
   phase: 'ki' | 'sho' | 'ten' | 'ketsu';
   characters?: string[];
+  title?: string;  // Added for NodeDetailPanel
+  content?: string; // Added for NodeDetailPanel
+  tags?: string[];  // Added for NodeDetailPanel
 }
 
 interface StoryNodeProps {
