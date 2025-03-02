@@ -1,10 +1,10 @@
 
 import { ReactNode, useState } from "react";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import StoryflowSidebar from "@/components/sidebar/StoryflowSidebar";
 import ChatAssistant from "@/components/chat/ChatAssistant";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Save, Share, Settings, HelpCircle, BookOpen, Users } from "lucide-react";
+import { MessageSquare, Save, Share, Settings, HelpCircle, BookOpen, Users, PanelLeft } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
@@ -12,6 +12,24 @@ import { ja } from "date-fns/locale";
 interface MainLayoutProps {
   children: ReactNode;
 }
+
+// サイドバーが閉じられた時に表示されるボタン
+const SidebarOpenButton = () => {
+  const { state, toggleSidebar } = useSidebar();
+  
+  if (state === "expanded") return null;
+  
+  return (
+    <Button 
+      variant="outline" 
+      size="icon" 
+      className="fixed left-4 top-4 z-50 rounded-full shadow-md" 
+      onClick={toggleSidebar}
+    >
+      <PanelLeft className="h-4 w-4" />
+    </Button>
+  );
+};
 
 const MainLayout = ({ children }: MainLayoutProps) => {
   const [isChatOpen, setIsChatOpen] = useState(true);
@@ -21,6 +39,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
     <SidebarProvider>
       <div className="h-full flex w-full">
         <StoryflowSidebar />
+        <SidebarOpenButton />
         
         <div className="flex-1 flex flex-col h-full overflow-hidden relative">
           <header className="h-16 border-b flex items-center px-6 bg-white/95 backdrop-blur-sm sticky top-0 z-10">
