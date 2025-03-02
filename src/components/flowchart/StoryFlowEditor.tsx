@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef } from 'react';
 import { 
   ReactFlow, 
@@ -12,7 +11,8 @@ import {
   MarkerType,
   BackgroundVariant,
   useReactFlow,
-  Node
+  Node,
+  NodeMouseHandler
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { initialNodes, initialEdges } from './storyFlowData';
@@ -48,8 +48,8 @@ const StoryFlowEditor = () => {
   const reactFlowInstance = useReactFlow();
   
   // Handle node selection
-  const onNodeClick = useCallback((event, node: Node<StoryNodeData>) => {
-    setSelectedNode(node);
+  const onNodeClick: NodeMouseHandler = useCallback((event, node) => {
+    setSelectedNode(node as Node<StoryNodeData>);
   }, []);
   
   // Handle edge creation
@@ -96,21 +96,20 @@ const StoryFlowEditor = () => {
   
   // Add a new node at the clicked position
   const addNewNode = useCallback((phase = 'ki') => {
-    const newNode = {
+    const newNode: Node<StoryNodeData> = {
       id: `node_${Date.now()}`,
       type: 'storyNode',
       position: menuPosition,
       data: { 
         label: '新しいシーン', 
-        type: phase === 'ki' ? '起' : phase === 'sho' ? '承' : phase === 'ten' ? '転' : '結',
         description: '',
+        phase: phase as 'ki' | 'sho' | 'ten' | 'ketsu',
         characters: [],
         title: '新しいシーン',
         content: '',
         tags: [],
         notes: '',
-        phase: phase
-      } as StoryNodeData,
+      },
     };
     
     setNodes((nds) => [...nds, newNode]);

@@ -4,14 +4,14 @@ import { Handle, Position } from '@xyflow/react';
 import { cn } from '@/lib/utils';
 import { MoreHorizontal, Edit2, UserCircle } from 'lucide-react';
 
-export interface StoryNodeData {
+export interface StoryNodeData extends Record<string, unknown> {
   label: string;
   description: string;
   phase: 'ki' | 'sho' | 'ten' | 'ketsu';
   characters?: string[];
-  title?: string;  // Added for NodeDetailPanel
-  content?: string; // Added for NodeDetailPanel
-  tags?: string[];  // Added for NodeDetailPanel
+  title?: string;
+  content?: string;
+  tags?: string[];
 }
 
 interface StoryNodeProps {

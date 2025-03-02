@@ -1,9 +1,10 @@
 
 import { Node, Edge, MarkerType } from '@xyflow/react';
+import { StoryNodeData } from './nodes/StoryNode';
 
 export const generateNodeId = () => `node_${Math.random().toString(36).substr(2, 9)}`;
 
-export const initialNodes: Node[] = [
+export const initialNodes: Node<StoryNodeData>[] = [
   {
     id: 'node-1',
     type: 'storyNode',
