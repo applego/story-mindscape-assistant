@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { 
   ReactFlow, 
   MiniMap, 
@@ -8,18 +8,30 @@ import {
   useNodesState,
   useEdgesState,
   addEdge,
-  Connection,
-  Edge,
   Panel,
   MarkerType,
-  BackgroundVariant
+  BackgroundVariant,
+  useReactFlow,
+  Node
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { initialNodes, initialEdges } from './storyFlowData';
 import StoryNode from './nodes/StoryNode';
-import StoryNodeMenu from './StoryNodeMenu';
+import FlowAIAssistant from './FlowAIAssistant';
+import NodeDetailPanel from './NodeDetailPanel';
+import { nodeTypeColors } from './storyFlowStyles';
 import { Button } from '@/components/ui/button';
-import { Plus, Save, ZoomIn, ZoomOut } from 'lucide-react';
+import { 
+  Plus, 
+  Save, 
+  ZoomIn, 
+  ZoomOut, 
+  Trash2, 
+  MessageCircle, 
+  MoreHorizontal, 
+  Repeat 
+} from 'lucide-react';
+import { toast } from 'sonner';
 
 const nodeTypes = {
   storyNode: StoryNode,
@@ -28,9 +40,12 @@ const nodeTypes = {
 const StoryFlowEditor = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [selectedNode, setSelectedNode] = useState(null);
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
   const [showMenu, setShowMenu] = useState(false);
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
+  
+  const reactFlowInstance = useReactFlow();
   
   // Handle node selection
   const onNodeClick = useCallback((event, node) => {
@@ -49,21 +64,26 @@ const StoryFlowEditor = () => {
       },
     };
     setEdges((eds) => addEdge(newEdge, eds));
+    toast.success('シーン間の接続を作成しました');
   }, [setEdges]);
   
-  // Handle background click to add a new node
+  // Handle background click
   const onPaneClick = useCallback((event) => {
-    // Clear selection
+    // 右クリックメニューが表示されている場合は非表示にする
+    if (showMenu) {
+      setShowMenu(false);
+      return;
+    }
+    // 通常のクリックでは選択解除する
     setSelectedNode(null);
-    setShowMenu(false);
-  }, []);
+  }, [showMenu]);
   
-  // Handle right-click to show context menu
+  // Handle right-click for context menu
   const onPaneContextMenu = useCallback((event) => {
-    // Prevent default context menu
+    // デフォルトのコンテキストメニューを表示しない
     event.preventDefault();
     
-    // Get the position relative to the pane
+    // パネルに対する相対位置を取得
     const reactFlowBounds = event.currentTarget.getBoundingClientRect();
     const position = {
       x: event.clientX - reactFlowBounds.left,
@@ -75,34 +95,69 @@ const StoryFlowEditor = () => {
   }, []);
   
   // Add a new node at the clicked position
-  const addNewNode = useCallback((type = '起') => {
+  const addNewNode = useCallback((phase = 'ki') => {
     const newNode = {
       id: `node_${Date.now()}`,
       type: 'storyNode',
       position: menuPosition,
       data: { 
         label: '新しいシーン', 
-        type: type,
+        type: phase === 'ki' ? '起' : phase === 'sho' ? '承' : phase === 'ten' ? '転' : '結',
         description: '',
         characters: [],
         notes: '',
-        phase: type === '起' ? 'ki' : type === '承' ? 'sho' : type === '転' ? 'ten' : 'ketsu'
+        phase: phase
       },
     };
     
     setNodes((nds) => [...nds, newNode]);
     setShowMenu(false);
+    toast.success('新しいシーンを作成しました');
   }, [menuPosition, setNodes]);
   
-  // Get the flow style
-  const flowStyle = {
-    background: '#f8f9fa',
-    width: '100%',
-    height: '100%',
-  };
+  // Update node data
+  const handleNodeUpdate = useCallback((nodeId, newData) => {
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === nodeId ? { ...node, data: { ...node.data, ...newData } } : node
+      )
+    );
+  }, [setNodes]);
+  
+  // Delete selected node
+  const deleteSelectedNode = useCallback(() => {
+    if (!selectedNode) return;
+    
+    setNodes((nds) => nds.filter((node) => node.id !== selectedNode.id));
+    setEdges((eds) => 
+      eds.filter((edge) => 
+        edge.source !== selectedNode.id && edge.target !== selectedNode.id
+      )
+    );
+    setSelectedNode(null);
+    toast.success('シーンを削除しました');
+  }, [selectedNode, setNodes, setEdges]);
+  
+  // Save the current flow
+  const saveFlow = useCallback(() => {
+    const flow = reactFlowInstance.toObject();
+    localStorage.setItem('storyflow', JSON.stringify(flow));
+    toast.success('ストーリーフローを保存しました');
+  }, [reactFlowInstance]);
+  
+  // Load the saved flow
+  const loadSavedFlow = useCallback(() => {
+    const savedFlow = localStorage.getItem('storyflow');
+    if (savedFlow) {
+      const flow = JSON.parse(savedFlow);
+      setNodes(flow.nodes || []);
+      setEdges(flow.edges || []);
+      toast.success('ストーリーフローを読み込みました');
+    }
+  }, [setNodes, setEdges]);
   
   return (
-    <div style={{ width: '100%', height: '100%' }}>
+    <div className="w-full h-full flex flex-col">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -115,8 +170,7 @@ const StoryFlowEditor = () => {
         nodeTypes={nodeTypes}
         fitView
         fitViewOptions={{ padding: 0.2 }}
-        style={flowStyle}
-        defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+        className="flex-1 bg-gray-50"
       >
         <Controls />
         <MiniMap 
@@ -131,14 +185,36 @@ const StoryFlowEditor = () => {
         />
         
         <Panel position="top-right" className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => addNewNode('起')}>
+          <Button size="sm" variant="outline" onClick={() => addNewNode('ki')}>
             <Plus className="h-4 w-4 mr-1" />
             新シーン
           </Button>
-          <Button size="sm" variant="outline">
+          <Button size="sm" variant="outline" onClick={saveFlow}>
             <Save className="h-4 w-4 mr-1" />
             保存
           </Button>
+          <Button size="sm" variant="outline" onClick={loadSavedFlow}>
+            <Repeat className="h-4 w-4 mr-1" />
+            読込
+          </Button>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={() => setShowAIAssistant(true)}
+          >
+            <MessageCircle className="h-4 w-4 mr-1" />
+            AIアシスト
+          </Button>
+          {selectedNode && (
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={deleteSelectedNode}
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              削除
+            </Button>
+          )}
         </Panel>
         
         {showMenu && (
@@ -155,57 +231,38 @@ const StoryFlowEditor = () => {
             }}
           >
             <div className="flex flex-col gap-2">
-              <Button size="sm" onClick={() => addNewNode('起')}>起：序章</Button>
-              <Button size="sm" onClick={() => addNewNode('承')}>承：展開</Button>
-              <Button size="sm" onClick={() => addNewNode('転')}>転：山場</Button>
-              <Button size="sm" onClick={() => addNewNode('結')}>結：結末</Button>
+              <Button size="sm" onClick={() => addNewNode('ki')} className="justify-start">
+                <div className="w-3 h-3 bg-blue-100 border border-blue-500 mr-2"></div>
+                {nodeTypeColors.ki.label}
+              </Button>
+              <Button size="sm" onClick={() => addNewNode('sho')} className="justify-start">
+                <div className="w-3 h-3 bg-green-100 border border-green-500 mr-2"></div>
+                {nodeTypeColors.sho.label}
+              </Button>
+              <Button size="sm" onClick={() => addNewNode('ten')} className="justify-start">
+                <div className="w-3 h-3 bg-orange-100 border border-orange-500 mr-2"></div>
+                {nodeTypeColors.ten.label}
+              </Button>
+              <Button size="sm" onClick={() => addNewNode('ketsu')} className="justify-start">
+                <div className="w-3 h-3 bg-purple-100 border border-purple-500 mr-2"></div>
+                {nodeTypeColors.ketsu.label}
+              </Button>
               <Button size="sm" variant="outline" onClick={() => setShowMenu(false)}>閉じる</Button>
             </div>
           </div>
         )}
       </ReactFlow>
       
-      {selectedNode && (
-        <div className="absolute bottom-0 left-0 right-0 bg-white border-t p-4 h-[30%] overflow-auto">
-          <h3 className="font-medium text-lg mb-2">{selectedNode.data.label}</h3>
-          <p className="text-gray-500 text-sm mb-4">シーンの詳細情報やメモを編集できます</p>
-          
-          <div className="flex flex-col space-y-2">
-            <input
-              type="text"
-              value={selectedNode.data.label}
-              onChange={(e) => {
-                const newLabel = e.target.value;
-                setNodes((nds) =>
-                  nds.map((node) =>
-                    node.id === selectedNode.id
-                      ? { ...node, data: { ...node.data, label: newLabel } }
-                      : node
-                  )
-                );
-              }}
-              className="border rounded p-2"
-              placeholder="シーンのタイトル"
-            />
-            
-            <textarea
-              value={selectedNode.data.description || ''}
-              onChange={(e) => {
-                const newDesc = e.target.value;
-                setNodes((nds) =>
-                  nds.map((node) =>
-                    node.id === selectedNode.id
-                      ? { ...node, data: { ...node.data, description: newDesc } }
-                      : node
-                  )
-                );
-              }}
-              className="border rounded p-2 h-20"
-              placeholder="シーンの説明"
-            />
-          </div>
-        </div>
-      )}
+      <NodeDetailPanel
+        selectedNode={selectedNode}
+        onNodeUpdate={handleNodeUpdate}
+      />
+
+      <FlowAIAssistant
+        isOpen={showAIAssistant}
+        onOpenChange={setShowAIAssistant}
+        selectedNodeId={selectedNode?.id || null}
+      />
     </div>
   );
 };
