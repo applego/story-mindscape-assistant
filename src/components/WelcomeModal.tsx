@@ -31,6 +31,7 @@ const WelcomeModal = () => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="max-w-[700px] p-0 overflow-hidden">
+        <DialogTitle className="sr-only">StoryMindscape へようこそ</DialogTitle>
         <div className="h-24 bg-gradient-to-r from-storyflow-ki via-storyflow-sho to-storyflow-ketsu relative">
           <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/40 to-transparent text-white">
             <h2 className="text-2xl font-bold">StoryMindscape</h2>
