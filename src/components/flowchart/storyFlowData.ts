@@ -8,51 +8,76 @@ export const initialNodes: Node<StoryNodeData>[] = [
   {
     id: 'node-1',
     type: 'storyNode',
-    position: { x: 50, y: 100 },
+    position: { x: 180, y: 250 },
     data: { 
       label: '起：主人公の日常', 
       description: '主人公の通常世界を描写し、物語の世界観を確立する。主人公の目標や願望を示し、共感を生み出す。',
-      phase: 'ki'
+      phase: 'ki',
+      content: '',
+      title: '主人公の日常',
+      characters: [],
+      tags: [],
+      notes: ''
     },
   },
   {
     id: 'node-2',
     type: 'storyNode',
-    position: { x: 350, y: 100 },
+    position: { x: 450, y: 250 },
     data: { 
       label: '起：冒険への誘い', 
       description: '主人公が冒険に誘われるか、平穏な日常に変化が起きる。まだ冒険の始まりではない。',
-      phase: 'ki'
+      phase: 'ki',
+      content: '',
+      title: '冒険への誘い',
+      characters: [],
+      tags: [],
+      notes: ''
     },
   },
   {
     id: 'node-3',
     type: 'storyNode',
-    position: { x: 350, y: 300 },
+    position: { x: 450, y: 400 },
     data: { 
       label: '承：最初の試練', 
       description: '主人公は冒険の世界に入り、新たな法則や仲間と出会う。最初の小さな試練を乗り越える。',
-      phase: 'sho'
+      phase: 'sho',
+      content: '',
+      title: '最初の試練',
+      characters: [],
+      tags: [],
+      notes: ''
     },
   },
   {
     id: 'node-4',
     type: 'storyNode',
-    position: { x: 700, y: 300 },
+    position: { x: 700, y: 400 },
     data: { 
       label: '転：大きな危機', 
       description: '物語の転換点。主人公は最大の危機や試練に直面し、これまでの考え方や方法では乗り越えられないことに気づく。',
-      phase: 'ten'
+      phase: 'ten',
+      content: '',
+      title: '大きな危機',
+      characters: [],
+      tags: [],
+      notes: ''
     },
   },
   {
     id: 'node-5',
     type: 'storyNode',
-    position: { x: 1000, y: 300 },
+    position: { x: 950, y: 400 },
     data: { 
       label: '結：変化と成長', 
       description: '主人公は試練を乗り越え、内面的・外面的に変化を遂げる。元の世界に戻るか、新たな世界で生きることを選ぶ。',
-      phase: 'ketsu'
+      phase: 'ketsu',
+      content: '',
+      title: '変化と成長',
+      characters: [],
+      tags: [],
+      notes: ''
     },
   },
 ];

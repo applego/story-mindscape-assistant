@@ -1,4 +1,5 @@
-import { useState, useCallback, useRef } from 'react';
+
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { 
   ReactFlow, 
   MiniMap, 
@@ -13,7 +14,8 @@ import {
   useReactFlow,
   Node,
   NodeMouseHandler,
-  ReactFlowProvider
+  ReactFlowProvider,
+  Viewport
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { initialNodes, initialEdges } from './storyFlowData';
@@ -47,6 +49,21 @@ const StoryFlowEditorContent = () => {
   const [showAIAssistant, setShowAIAssistant] = useState(false);
   
   const reactFlowInstance = useReactFlow();
+  
+  // サンプルデータが表示されない問題を修正するための処理
+  useEffect(() => {
+    // ローカルストレージの保存データをクリアする
+    // localStorage.removeItem('storyflow'); // 一時的にコメントアウト
+
+    // タイマーを設定してビューを正しく設定
+    const timer = setTimeout(() => {
+      if (reactFlowInstance) {
+        reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: false });
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [reactFlowInstance]);
   
   const onNodeClick: NodeMouseHandler = useCallback((event, node) => {
     setSelectedNode(node as Node<StoryNodeData>);
@@ -137,14 +154,37 @@ const StoryFlowEditorContent = () => {
   }, [reactFlowInstance]);
   
   const loadSavedFlow = useCallback(() => {
-    const savedFlow = localStorage.getItem('storyflow');
-    if (savedFlow) {
-      const flow = JSON.parse(savedFlow);
-      setNodes(flow.nodes || []);
-      setEdges(flow.edges || []);
-      toast.success('ストーリーフローを読み込みました');
+    try {
+      const savedFlow = localStorage.getItem('storyflow');
+      if (savedFlow) {
+        const flow = JSON.parse(savedFlow);
+        if (flow.nodes && flow.nodes.length > 0) {
+          setNodes(flow.nodes || []);
+          setEdges(flow.edges || []);
+          toast.success('ストーリーフローを読み込みました');
+        } else {
+          // 保存データが空の場合は初期データを表示
+          setNodes(initialNodes);
+          setEdges(initialEdges);
+          toast.success('初期データを読み込みました');
+        }
+      }
+    } catch (error) {
+      console.error('Flow loading error:', error);
+      // エラーが発生した場合も初期データを表示
+      setNodes(initialNodes);
+      setEdges(initialEdges);
+      toast.error('読み込みエラーが発生しました。初期データを表示します。');
     }
   }, [setNodes, setEdges]);
+  
+  // 初期ビューを設定するための処理を追加
+  const resetView = useCallback(() => {
+    if (reactFlowInstance) {
+      reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: false });
+      toast.success('ビューをリセットしました');
+    }
+  }, [reactFlowInstance]);
   
   return (
     <div className="w-full h-full flex flex-col">
@@ -161,6 +201,7 @@ const StoryFlowEditorContent = () => {
         fitView
         fitViewOptions={{ padding: 0.2 }}
         className="flex-1 bg-gray-50"
+        defaultViewport={{ x: 0, y: 0, zoom: 1 }}
       >
         <Controls />
         <MiniMap 
@@ -186,6 +227,10 @@ const StoryFlowEditorContent = () => {
           <Button size="sm" variant="outline" onClick={loadSavedFlow}>
             <Repeat className="h-4 w-4 mr-1" />
             読込
+          </Button>
+          <Button size="sm" variant="outline" onClick={resetView}>
+            <ZoomOut className="h-4 w-4 mr-1" />
+            全体表示
           </Button>
           <Button 
             size="sm" 
