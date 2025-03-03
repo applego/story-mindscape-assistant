@@ -6,7 +6,23 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Node } from '@xyflow/react';
 import { Button } from '@/components/ui/button';
-import { StoryNodeData } from './nodes/StoryNode';
+import { StoryNodeData } from './storyStructureTypes';
+import { 
+  BookText, 
+  Route, 
+  Layout, 
+  Film, 
+  MessageCircle, 
+  UserCircle,
+  PenTool
+} from 'lucide-react';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface NodeDetailPanelProps {
   selectedNode: Node<StoryNodeData> | null;
@@ -15,35 +31,71 @@ interface NodeDetailPanelProps {
 
 const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeUpdate }) => {
   const [title, setTitle] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
   const [content, setContent] = useState<string>('');
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState<string>('');
+  const [characters, setCharacters] = useState<string[]>([]);
+  const [characterInput, setCharacterInput] = useState<string>('');
+  const [phase, setPhase] = useState<string>('ki');
+  const [actionType, setActionType] = useState<string>('action');
+  const [character, setCharacter] = useState<string>('');
 
   useEffect(() => {
     if (selectedNode) {
-      setTitle(selectedNode.data.title || selectedNode.data.label || '');
-      setContent(selectedNode.data.content || selectedNode.data.description || '');
+      setTitle(selectedNode.data.title || '');
+      setDescription(selectedNode.data.description || '');
+      setContent(selectedNode.data.content || '');
       setTags(selectedNode.data.tags || []);
+      setCharacters(selectedNode.data.characters || []);
+      setPhase(selectedNode.data.phase || 'ki');
+      
+      if (selectedNode.data.type === 'action') {
+        setActionType(selectedNode.data.actionType || 'action');
+        setCharacter(selectedNode.data.character || '');
+      }
     }
   }, [selectedNode]);
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
     if (selectedNode) {
-      onNodeUpdate(selectedNode.id, { 
-        title: e.target.value,
-        label: e.target.value // Update label as well to maintain compatibility
-      });
+      onNodeUpdate(selectedNode.id, { title: e.target.value });
+    }
+  };
+
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setDescription(e.target.value);
+    if (selectedNode) {
+      onNodeUpdate(selectedNode.id, { description: e.target.value });
     }
   };
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value);
     if (selectedNode) {
-      onNodeUpdate(selectedNode.id, { 
-        content: e.target.value,
-        description: e.target.value // Update description as well to maintain compatibility
-      });
+      onNodeUpdate(selectedNode.id, { content: e.target.value });
+    }
+  };
+  
+  const handlePhaseChange = (value: string) => {
+    setPhase(value);
+    if (selectedNode) {
+      onNodeUpdate(selectedNode.id, { phase: value as any });
+    }
+  };
+  
+  const handleActionTypeChange = (value: string) => {
+    setActionType(value);
+    if (selectedNode) {
+      onNodeUpdate(selectedNode.id, { actionType: value as any });
+    }
+  };
+  
+  const handleCharacterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCharacter(e.target.value);
+    if (selectedNode) {
+      onNodeUpdate(selectedNode.id, { character: e.target.value });
     }
   };
 
@@ -65,6 +117,25 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
       onNodeUpdate(selectedNode.id, { tags: newTags });
     }
   };
+  
+  const handleAddCharacter = () => {
+    if (characterInput.trim() && !characters.includes(characterInput.trim())) {
+      const newCharacters = [...characters, characterInput.trim()];
+      setCharacters(newCharacters);
+      setCharacterInput('');
+      if (selectedNode) {
+        onNodeUpdate(selectedNode.id, { characters: newCharacters });
+      }
+    }
+  };
+
+  const handleRemoveCharacter = (characterToRemove: string) => {
+    const newCharacters = characters.filter(char => char !== characterToRemove);
+    setCharacters(newCharacters);
+    if (selectedNode) {
+      onNodeUpdate(selectedNode.id, { characters: newCharacters });
+    }
+  };
 
   if (!selectedNode) {
     return (
@@ -76,9 +147,45 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
     );
   }
 
+  // ノードタイプに基づいてアイコンを返す
+  const getNodeTypeIcon = () => {
+    switch (selectedNode.data.type) {
+      case 'story': return <BookText className="h-5 w-5 mr-2" />;
+      case 'storyline': return <Route className="h-5 w-5 mr-2" />;
+      case 'sequence': return <Layout className="h-5 w-5 mr-2" />;
+      case 'scene': return <Film className="h-5 w-5 mr-2" />;
+      case 'action': 
+        if (selectedNode.data.actionType === 'dialogue') return <MessageCircle className="h-5 w-5 mr-2" />;
+        if (selectedNode.data.actionType === 'thought') return <PenTool className="h-5 w-5 mr-2" />;
+        return <UserCircle className="h-5 w-5 mr-2" />;
+      default: return null;
+    }
+  };
+
+  // ノードタイプの名前を返す
+  const getNodeTypeName = () => {
+    switch (selectedNode.data.type) {
+      case 'story': return '物語';
+      case 'storyline': return 'ストーリーライン';
+      case 'sequence': return 'シークエンス';
+      case 'scene': return 'シーン';
+      case 'action': 
+        if (selectedNode.data.actionType === 'dialogue') return '台詞';
+        if (selectedNode.data.actionType === 'reaction') return 'リアクション';
+        if (selectedNode.data.actionType === 'thought') return '思考';
+        return 'アクション';
+      default: return 'ノード';
+    }
+  };
+
   return (
     <Card className="w-full h-full overflow-auto">
       <CardContent className="p-4">
+        <div className="flex items-center mb-4">
+          {getNodeTypeIcon()}
+          <h3 className="text-lg font-medium">{getNodeTypeName()}の詳細</h3>
+        </div>
+        
         <div className="space-y-4">
           <div>
             <Label htmlFor="node-title">タイトル</Label>
@@ -86,21 +193,121 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
               id="node-title" 
               value={title} 
               onChange={handleTitleChange} 
-              placeholder="ノードのタイトルを入力" 
+              placeholder="タイトルを入力" 
             />
           </div>
           
           <div>
-            <Label htmlFor="node-content">内容</Label>
+            <Label htmlFor="node-description">説明</Label>
             <Textarea 
-              id="node-content" 
-              value={content} 
-              onChange={handleContentChange} 
-              placeholder="ノードの内容を入力"
-              className="min-h-[150px]"
+              id="node-description" 
+              value={description} 
+              onChange={handleDescriptionChange} 
+              placeholder="説明を入力"
+              className="min-h-[80px]"
             />
           </div>
           
+          {/* シーンとアクション用のコンテンツフィールド */}
+          {(selectedNode.data.type === 'scene' || selectedNode.data.type === 'action') && (
+            <div>
+              <Label htmlFor="node-content">内容</Label>
+              <Textarea 
+                id="node-content" 
+                value={content} 
+                onChange={handleContentChange} 
+                placeholder="内容を入力"
+                className="min-h-[120px]"
+              />
+            </div>
+          )}
+          
+          {/* アクション用の追加フィールド */}
+          {selectedNode.data.type === 'action' && (
+            <>
+              <div>
+                <Label htmlFor="action-type">アクションタイプ</Label>
+                <Select value={actionType} onValueChange={handleActionTypeChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="アクションタイプを選択" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="action">アクション</SelectItem>
+                    <SelectItem value="reaction">リアクション</SelectItem>
+                    <SelectItem value="dialogue">台詞</SelectItem>
+                    <SelectItem value="thought">思考</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="character">キャラクター</Label>
+                <Input 
+                  id="character" 
+                  value={character} 
+                  onChange={handleCharacterChange} 
+                  placeholder="行動するキャラクター" 
+                />
+              </div>
+            </>
+          )}
+          
+          {/* シーン用の追加フィールド */}
+          {selectedNode.data.type === 'scene' && (
+            <div>
+              <Label htmlFor="scene-phase">段階</Label>
+              <Select value={phase} onValueChange={handlePhaseChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="段階を選択" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ki">起</SelectItem>
+                  <SelectItem value="sho">承</SelectItem>
+                  <SelectItem value="ten">転</SelectItem>
+                  <SelectItem value="ketsu">結</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          
+          {/* 登場キャラクター（シーンとアクション用） */}
+          {(selectedNode.data.type === 'scene' || selectedNode.data.type === 'storyline' || selectedNode.data.type === 'sequence') && (
+            <div>
+              <Label htmlFor="node-characters">登場キャラクター</Label>
+              <div className="flex gap-2">
+                <Input 
+                  id="node-characters" 
+                  value={characterInput} 
+                  onChange={(e) => setCharacterInput(e.target.value)} 
+                  placeholder="キャラクターを追加" 
+                />
+                <Button type="button" onClick={handleAddCharacter} size="sm">追加</Button>
+              </div>
+              
+              {characters.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {characters.map((char) => (
+                    <div 
+                      key={char} 
+                      className="bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-xs flex items-center gap-1"
+                    >
+                      <UserCircle size={12} />
+                      {char}
+                      <button 
+                        type="button" 
+                        onClick={() => handleRemoveCharacter(char)} 
+                        className="text-secondary-foreground/70 hover:text-secondary-foreground"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* タグ（全ノード共通） */}
           <div>
             <Label htmlFor="node-tags">タグ</Label>
             <div className="flex gap-2">

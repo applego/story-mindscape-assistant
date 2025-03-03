@@ -18,8 +18,8 @@ import {
   Viewport
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { initialNodes, initialEdges } from './storyFlowData';
-import StoryNode, { StoryNodeData } from './nodes/StoryNode';
+import { initialStoryNodes, initialStoryEdges } from './storyTreeData';
+import StoryNode from './nodes/StoryNode';
 import FlowAIAssistant from './FlowAIAssistant';
 import NodeDetailPanel from './NodeDetailPanel';
 import { nodeTypeColors } from './storyFlowStyles';
@@ -32,17 +32,23 @@ import {
   Trash2, 
   MessageCircle, 
   MoreHorizontal, 
-  Repeat 
+  Repeat,
+  BookText,
+  Route,
+  Layout,
+  Film,
+  UserCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { StoryNodeData } from './storyStructureTypes';
 
 const nodeTypes = {
   storyNode: StoryNode,
 };
 
 const StoryFlowEditorContent = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState<StoryNodeData>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNode, setSelectedNode] = useState<Node<StoryNodeData> | null>(null);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
   const [showMenu, setShowMenu] = useState(false);
@@ -62,20 +68,20 @@ const StoryFlowEditorContent = () => {
         } else {
           console.log('保存データが空のため、初期データを使用します');
           // 初期データの読み込み
-          setNodes(initialNodes);
-          setEdges(initialEdges);
+          setNodes(initialStoryNodes);
+          setEdges(initialStoryEdges);
         }
       } else {
         console.log('保存データがないため、初期データを使用します');
         // 初期データの読み込み
-        setNodes(initialNodes);
-        setEdges(initialEdges);
+        setNodes(initialStoryNodes);
+        setEdges(initialStoryEdges);
       }
     } catch (error) {
       console.error('Flow loading error:', error);
       // エラー時も初期データを使用
-      setNodes(initialNodes);
-      setEdges(initialEdges);
+      setNodes(initialStoryNodes);
+      setEdges(initialStoryEdges);
     }
     
     const timer = setTimeout(() => {
@@ -103,7 +109,7 @@ const StoryFlowEditorContent = () => {
       },
     };
     setEdges((eds) => addEdge(newEdge, eds));
-    toast.success('シーン間の接続を作成しました');
+    toast.success('ノード間の接続を作成しました');
   }, [setEdges]);
   
   const onPaneClick = useCallback((event) => {
@@ -127,27 +133,55 @@ const StoryFlowEditorContent = () => {
     setShowMenu(true);
   }, []);
   
-  const addNewNode = useCallback((phase = 'ki') => {
+  const addNewNode = useCallback((type: 'story' | 'storyline' | 'sequence' | 'scene' | 'action', parentId?: string) => {
     const newNode: Node<StoryNodeData> = {
-      id: `node_${Date.now()}`,
+      id: `${type}_${Date.now()}`,
       type: 'storyNode',
       position: menuPosition,
       data: { 
-        label: '新しいシーン', 
+        type: type,
+        title: `新しい${getNodeTypeLabel(type)}`,
         description: '',
-        phase: phase as 'ki' | 'sho' | 'ten' | 'ketsu',
-        characters: [],
-        title: '新しいシーン',
-        content: '',
-        tags: [],
-        notes: '',
-      },
+        phase: 'ki' as any,
+        ...(parentId ? { parentId } : {}),
+        ...(type === 'scene' ? { content: '' } : {}),
+        ...(type === 'action' ? { 
+          actionType: 'action',
+          character: '',
+          content: '' 
+        } : {}),
+      } as StoryNodeData,
     };
     
     setNodes((nds) => [...nds, newNode]);
+    
+    // 親ノードが指定されている場合は、親ノードとの接続も作成
+    if (parentId) {
+      const newEdge = {
+        id: `edge-${parentId}-${newNode.id}`,
+        source: parentId,
+        target: newNode.id,
+        animated: true,
+        markerEnd: { type: MarkerType.ArrowClosed },
+        style: { strokeWidth: 2 },
+      };
+      setEdges((eds) => [...eds, newEdge]);
+    }
+    
     setShowMenu(false);
-    toast.success('新しいシーンを作成しました');
-  }, [menuPosition, setNodes]);
+    toast.success(`新しい${getNodeTypeLabel(type)}を作成しました`);
+  }, [menuPosition, setNodes, setEdges]);
+  
+  const getNodeTypeLabel = (type: string) => {
+    switch (type) {
+      case 'story': return '物語';
+      case 'storyline': return 'ストーリーライン';
+      case 'sequence': return 'シークエンス';
+      case 'scene': return 'シーン';
+      case 'action': return 'アクション';
+      default: return 'ノード';
+    }
+  };
   
   const handleNodeUpdate = useCallback((nodeId: string, newData: Partial<StoryNodeData>) => {
     setNodes((nds) =>
@@ -160,15 +194,49 @@ const StoryFlowEditorContent = () => {
   const deleteSelectedNode = useCallback(() => {
     if (!selectedNode) return;
     
-    setNodes((nds) => nds.filter((node) => node.id !== selectedNode.id));
-    setEdges((eds) => 
-      eds.filter((edge) => 
-        edge.source !== selectedNode.id && edge.target !== selectedNode.id
-      )
-    );
+    // 子ノードも削除する必要があるか確認
+    const hasChildren = edges.some(edge => edge.source === selectedNode.id);
+    
+    if (hasChildren) {
+      if (!confirm('このノードを削除すると、すべての子ノードも削除されます。よろしいですか？')) {
+        return;
+      }
+      
+      // このノードとその子孫ノードをすべて取得
+      const getAllDescendants = (nodeId: string, acc: string[] = []): string[] => {
+        const childEdges = edges.filter(edge => edge.source === nodeId);
+        const childNodes = childEdges.map(edge => edge.target);
+        
+        acc.push(nodeId);
+        childNodes.forEach(childId => {
+          getAllDescendants(childId, acc);
+        });
+        
+        return acc;
+      };
+      
+      const nodesToDelete = getAllDescendants(selectedNode.id);
+      
+      // ノードとそれに関連するエッジを削除
+      setNodes((nds) => nds.filter((node) => !nodesToDelete.includes(node.id)));
+      setEdges((eds) => 
+        eds.filter((edge) => 
+          !nodesToDelete.includes(edge.source) && !nodesToDelete.includes(edge.target)
+        )
+      );
+    } else {
+      // 子ノードがない場合は、単純に選択されたノードだけを削除
+      setNodes((nds) => nds.filter((node) => node.id !== selectedNode.id));
+      setEdges((eds) => 
+        eds.filter((edge) => 
+          edge.source !== selectedNode.id && edge.target !== selectedNode.id
+        )
+      );
+    }
+    
     setSelectedNode(null);
-    toast.success('シーンを削除しました');
-  }, [selectedNode, setNodes, setEdges]);
+    toast.success('ノードを削除しました');
+  }, [selectedNode, edges, setNodes, setEdges]);
   
   const saveFlow = useCallback(() => {
     const flow = reactFlowInstance.toObject();
@@ -190,8 +258,8 @@ const StoryFlowEditorContent = () => {
             reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: false });
           }, 100);
         } else {
-          setNodes(initialNodes);
-          setEdges(initialEdges);
+          setNodes(initialStoryNodes);
+          setEdges(initialStoryEdges);
           toast.success('初期データを読み込みました');
           
           setTimeout(() => {
@@ -199,8 +267,8 @@ const StoryFlowEditorContent = () => {
           }, 100);
         }
       } else {
-        setNodes(initialNodes);
-        setEdges(initialEdges);
+        setNodes(initialStoryNodes);
+        setEdges(initialStoryEdges);
         toast.success('初期データを読み込みました');
         
         setTimeout(() => {
@@ -209,8 +277,8 @@ const StoryFlowEditorContent = () => {
       }
     } catch (error) {
       console.error('Flow loading error:', error);
-      setNodes(initialNodes);
-      setEdges(initialEdges);
+      setNodes(initialStoryNodes);
+      setEdges(initialStoryEdges);
       toast.error('読み込みエラーが発生しました。初期データを表示します。');
       
       setTimeout(() => {
@@ -227,8 +295,8 @@ const StoryFlowEditorContent = () => {
   }, [reactFlowInstance]);
   
   const resetToInitialData = useCallback(() => {
-    setNodes(initialNodes);
-    setEdges(initialEdges);
+    setNodes(initialStoryNodes);
+    setEdges(initialStoryEdges);
     
     setTimeout(() => {
       reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: false });
@@ -270,9 +338,9 @@ const StoryFlowEditorContent = () => {
           
           <Panel position="top-right" className="flex flex-col gap-2 z-10">
             <div className="flex gap-2 p-3 bg-white rounded-lg shadow-md mb-2">
-              <Button size="sm" variant="outline" onClick={() => addNewNode('ki')}>
-                <Plus className="h-4 w-4 mr-1" />
-                新シーン
+              <Button size="sm" variant="outline" onClick={() => addNewNode('story')}>
+                <BookText className="h-4 w-4 mr-1" />
+                物語
               </Button>
               <Button size="sm" variant="outline" onClick={saveFlow}>
                 <Save className="h-4 w-4 mr-1" />
@@ -341,22 +409,62 @@ const StoryFlowEditorContent = () => {
               }}
             >
               <div className="flex flex-col gap-2">
-                <Button size="sm" onClick={() => addNewNode('ki')} className="justify-start">
-                  <div className="w-3 h-3 bg-blue-100 border border-blue-500 mr-2"></div>
-                  {nodeTypeColors.ki.label}
+                <Button size="sm" onClick={() => addNewNode('story')} className="justify-start">
+                  <BookText size={14} className="mr-2" />
+                  物語
                 </Button>
-                <Button size="sm" onClick={() => addNewNode('sho')} className="justify-start">
-                  <div className="w-3 h-3 bg-green-100 border border-green-500 mr-2"></div>
-                  {nodeTypeColors.sho.label}
+                <Button size="sm" onClick={() => addNewNode('storyline')} className="justify-start">
+                  <Route size={14} className="mr-2" />
+                  ストーリーライン
                 </Button>
-                <Button size="sm" onClick={() => addNewNode('ten')} className="justify-start">
-                  <div className="w-3 h-3 bg-orange-100 border border-orange-500 mr-2"></div>
-                  {nodeTypeColors.ten.label}
+                <Button size="sm" onClick={() => addNewNode('sequence')} className="justify-start">
+                  <Layout size={14} className="mr-2" />
+                  シークエンス
                 </Button>
-                <Button size="sm" onClick={() => addNewNode('ketsu')} className="justify-start">
-                  <div className="w-3 h-3 bg-purple-100 border border-purple-500 mr-2"></div>
-                  {nodeTypeColors.ketsu.label}
+                <Button size="sm" onClick={() => addNewNode('scene')} className="justify-start">
+                  <Film size={14} className="mr-2" />
+                  シーン
                 </Button>
+                <Button size="sm" onClick={() => addNewNode('action')} className="justify-start">
+                  <UserCircle size={14} className="mr-2" />
+                  アクション
+                </Button>
+                
+                {selectedNode && (
+                  <>
+                    <div className="h-px bg-gray-200 my-1"></div>
+                    <p className="text-xs text-gray-500 px-2">選択中のノードに追加:</p>
+                    
+                    {selectedNode.data.type === 'story' && (
+                      <Button size="sm" onClick={() => addNewNode('storyline', selectedNode.id)} className="justify-start">
+                        <Route size={14} className="mr-2" />
+                        ストーリーライン追加
+                      </Button>
+                    )}
+                    
+                    {selectedNode.data.type === 'storyline' && (
+                      <Button size="sm" onClick={() => addNewNode('sequence', selectedNode.id)} className="justify-start">
+                        <Layout size={14} className="mr-2" />
+                        シークエンス追加
+                      </Button>
+                    )}
+                    
+                    {selectedNode.data.type === 'sequence' && (
+                      <Button size="sm" onClick={() => addNewNode('scene', selectedNode.id)} className="justify-start">
+                        <Film size={14} className="mr-2" />
+                        シーン追加
+                      </Button>
+                    )}
+                    
+                    {selectedNode.data.type === 'scene' && (
+                      <Button size="sm" onClick={() => addNewNode('action', selectedNode.id)} className="justify-start">
+                        <UserCircle size={14} className="mr-2" />
+                        アクション追加
+                      </Button>
+                    )}
+                  </>
+                )}
+                
                 <Button size="sm" variant="outline" onClick={() => setShowMenu(false)}>閉じる</Button>
               </div>
             </div>

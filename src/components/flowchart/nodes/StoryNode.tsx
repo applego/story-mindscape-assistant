@@ -2,17 +2,8 @@
 import { memo, useState } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { cn } from '@/lib/utils';
-import { MoreHorizontal, Edit2, UserCircle } from 'lucide-react';
-
-export interface StoryNodeData extends Record<string, unknown> {
-  label: string;
-  description: string;
-  phase: 'ki' | 'sho' | 'ten' | 'ketsu';
-  characters?: string[];
-  title?: string;
-  content?: string;
-  tags?: string[];
-}
+import { MoreHorizontal, Edit2, UserCircle, BookText, Route, Layout, Film, MessageCircle } from 'lucide-react';
+import { StoryNodeData, NodeType } from '../storyStructureTypes';
 
 interface StoryNodeProps {
   id: string;
@@ -24,41 +15,96 @@ interface StoryNodeProps {
 const StoryNode = ({ id, data, isConnectable, selected }: StoryNodeProps) => {
   const [isHovered, setIsHovered] = useState(false);
   
-  // フェーズに基づくスタイルを決定
+  // ノードタイプに基づくスタイルを決定
   const getBgColor = () => {
-    switch (data.phase) {
-      case 'ki': return 'bg-blue-50 border-blue-400';
-      case 'sho': return 'bg-green-50 border-green-400';
-      case 'ten': return 'bg-orange-50 border-orange-400';
-      case 'ketsu': return 'bg-purple-50 border-purple-400';
+    const nodeType = data.type;
+    
+    // ノードタイプごとの背景色
+    switch (nodeType) {
+      case 'story': return 'bg-indigo-50 border-indigo-400';
+      case 'storyline': return 'bg-blue-50 border-blue-400';
+      case 'sequence': return 'bg-green-50 border-green-400';
+      case 'scene': 
+        if (data.phase === 'ki') return 'bg-blue-50 border-blue-400';
+        if (data.phase === 'sho') return 'bg-green-50 border-green-400';
+        if (data.phase === 'ten') return 'bg-orange-50 border-orange-400';
+        if (data.phase === 'ketsu') return 'bg-purple-50 border-purple-400';
+        return 'bg-cyan-50 border-cyan-400';
+      case 'action': return 'bg-yellow-50 border-yellow-400';
       default: return 'bg-gray-50 border-gray-400';
     }
   };
 
   const getHeaderColor = () => {
-    switch (data.phase) {
-      case 'ki': return 'bg-blue-100';
-      case 'sho': return 'bg-green-100';
-      case 'ten': return 'bg-orange-100';
-      case 'ketsu': return 'bg-purple-100';
+    const nodeType = data.type;
+    
+    // ノードタイプごとのヘッダー色
+    switch (nodeType) {
+      case 'story': return 'bg-indigo-100';
+      case 'storyline': return 'bg-blue-100';
+      case 'sequence': return 'bg-green-100';
+      case 'scene': 
+        if (data.phase === 'ki') return 'bg-blue-100';
+        if (data.phase === 'sho') return 'bg-green-100';
+        if (data.phase === 'ten') return 'bg-orange-100';
+        if (data.phase === 'ketsu') return 'bg-purple-100';
+        return 'bg-cyan-100';
+      case 'action': return 'bg-yellow-100';
       default: return 'bg-gray-100';
     }
   };
 
-  const getLabel = () => {
-    switch (data.phase) {
-      case 'ki': return '起';
-      case 'sho': return '承';
-      case 'ten': return '転';
-      case 'ketsu': return '結';
+  // ノードタイプに基づくアイコンを決定
+  const getNodeIcon = () => {
+    const nodeType = data.type;
+    
+    switch (nodeType) {
+      case 'story': return <BookText size={14} />;
+      case 'storyline': return <Route size={14} />;
+      case 'sequence': return <Layout size={14} />;
+      case 'scene': return <Film size={14} />;
+      case 'action': 
+        if (data.actionType === 'dialogue') return <MessageCircle size={14} />;
+        return <UserCircle size={14} />;
+      default: return <Edit2 size={14} />;
+    }
+  };
+
+  const getNodeTypeLabel = () => {
+    const nodeType = data.type;
+    
+    switch (nodeType) {
+      case 'story': return '物語';
+      case 'storyline': return 'ストーリー';
+      case 'sequence': return 'シークエンス';
+      case 'scene': return 'シーン';
+      case 'action': 
+        if (data.actionType === 'dialogue') return '台詞';
+        if (data.actionType === 'reaction') return 'リアクション';
+        if (data.actionType === 'thought') return '思考';
+        return 'アクション';
       default: return '';
+    }
+  };
+
+  const getNodeWidth = () => {
+    const nodeType = data.type;
+    
+    switch (nodeType) {
+      case 'story': return 'w-[280px]';
+      case 'storyline': return 'w-[240px]';
+      case 'sequence': return 'w-[220px]';
+      case 'scene': return 'w-[220px]';
+      case 'action': return 'w-[200px]';
+      default: return 'w-[200px]';
     }
   };
 
   return (
     <div 
       className={cn(
-        "w-[220px] rounded-md overflow-hidden transition-all duration-300 border",
+        getNodeWidth(),
+        "rounded-md overflow-hidden transition-all duration-300 border",
         getBgColor(),
         selected ? "shadow-md ring-2 ring-blue-400 ring-opacity-50" : "shadow-sm",
         isHovered ? "shadow-md" : ""
@@ -76,9 +122,10 @@ const StoryNode = ({ id, data, isConnectable, selected }: StoryNodeProps) => {
       <div className={cn("px-3 py-2 font-medium text-sm flex items-center justify-between", getHeaderColor())}>
         <div className="flex items-center gap-1">
           <span className="w-5 h-5 flex items-center justify-center rounded-full bg-white text-xs border">
-            {getLabel()}
+            {getNodeIcon()}
           </span>
-          <span>{data.label}</span>
+          <span className="ml-1 text-xs text-gray-600">{getNodeTypeLabel()}</span>
+          <span className="ml-1">{data.title || 'タイトルなし'}</span>
         </div>
         
         <div className={cn("transition-opacity", isHovered || selected ? "opacity-100" : "opacity-0")}>
