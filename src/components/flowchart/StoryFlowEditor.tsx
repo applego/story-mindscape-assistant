@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { 
   ReactFlow, 
@@ -257,44 +258,62 @@ const StoryFlowEditorContent = () => {
           size={1}
         />
         
-        <Panel position="top-right" className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => addNewNode('ki')}>
-            <Plus className="h-4 w-4 mr-1" />
-            新シーン
-          </Button>
-          <Button size="sm" variant="outline" onClick={saveFlow}>
-            <Save className="h-4 w-4 mr-1" />
-            保存
-          </Button>
-          <Button size="sm" variant="outline" onClick={loadSavedFlow}>
-            <Repeat className="h-4 w-4 mr-1" />
-            読込
-          </Button>
-          <Button size="sm" variant="outline" onClick={resetView}>
-            <ZoomOut className="h-4 w-4 mr-1" />
-            全体表示
-          </Button>
-          <Button size="sm" variant="outline" onClick={resetToInitialData}>
-            <Repeat className="h-4 w-4 mr-1" />
-            初期化
-          </Button>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={() => setShowAIAssistant(true)}
-          >
-            <MessageCircle className="h-4 w-4 mr-1" />
-            AIアシスト
-          </Button>
-          {selectedNode && (
+        <Panel position="top-right" className="flex flex-col gap-2">
+          <div className="flex gap-2 p-2 bg-white rounded-lg shadow-sm mb-2">
+            <Button size="sm" variant="outline" onClick={() => addNewNode('ki')}>
+              <Plus className="h-4 w-4 mr-1" />
+              新シーン
+            </Button>
+            <Button size="sm" variant="outline" onClick={saveFlow}>
+              <Save className="h-4 w-4 mr-1" />
+              保存
+            </Button>
+            <Button size="sm" variant="outline" onClick={loadSavedFlow}>
+              <Repeat className="h-4 w-4 mr-1" />
+              読込
+            </Button>
+          </div>
+          
+          <div className="flex gap-2 p-2 bg-white rounded-lg shadow-sm">
+            <Button 
+              size="sm" 
+              variant="secondary" 
+              onClick={resetView}
+              className="bg-blue-50 hover:bg-blue-100 border border-blue-200"
+            >
+              <ZoomOut className="h-4 w-4 mr-1" />
+              全体表示
+            </Button>
+            <Button 
+              size="sm" 
+              variant="secondary" 
+              onClick={resetToInitialData}
+              className="bg-purple-50 hover:bg-purple-100 border border-purple-200"
+            >
+              <Repeat className="h-4 w-4 mr-1" />
+              初期化
+            </Button>
             <Button 
               size="sm" 
               variant="outline" 
-              onClick={deleteSelectedNode}
+              onClick={() => setShowAIAssistant(true)}
             >
-              <Trash2 className="h-4 w-4 mr-1" />
-              削除
+              <MessageCircle className="h-4 w-4 mr-1" />
+              AIアシスト
             </Button>
+          </div>
+          
+          {selectedNode && (
+            <div className="p-2 bg-white rounded-lg shadow-sm">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={deleteSelectedNode}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                削除
+              </Button>
+            </div>
           )}
         </Panel>
         
