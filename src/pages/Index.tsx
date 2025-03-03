@@ -20,7 +20,9 @@ const Index = () => {
             <Separator className="my-2" />
             
             <TabsContent value="plot" className="h-[calc(100vh-140px)]">
-              <StoryFlowEditor />
+              <div className="h-full">
+                <StoryFlowEditor />
+              </div>
             </TabsContent>
             
             <TabsContent value="characters" className="h-[calc(100vh-140px)]">

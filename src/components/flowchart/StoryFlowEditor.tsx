@@ -246,7 +246,7 @@ const StoryFlowEditorContent = () => {
         style={{ width: '100%', height: '100%' }}
         defaultViewport={{ x: 0, y: 0, zoom: 1 }}
       >
-        <Controls />
+        <Controls position="bottom-right" />
         <MiniMap 
           nodeStrokeWidth={3}
           zoomable
@@ -258,8 +258,8 @@ const StoryFlowEditorContent = () => {
           size={1}
         />
         
-        <Panel position="top-right" className="flex flex-col gap-2">
-          <div className="flex gap-2 p-2 bg-white rounded-lg shadow-sm mb-2">
+        <Panel position="top-right" className="flex flex-col gap-2 z-10">
+          <div className="flex gap-2 p-3 bg-white rounded-lg shadow-md mb-2">
             <Button size="sm" variant="outline" onClick={() => addNewNode('ki')}>
               <Plus className="h-4 w-4 mr-1" />
               新シーン
@@ -274,21 +274,21 @@ const StoryFlowEditorContent = () => {
             </Button>
           </div>
           
-          <div className="flex gap-2 p-2 bg-white rounded-lg shadow-sm">
+          <div className="flex gap-2 p-3 bg-white rounded-lg shadow-md">
             <Button 
               size="sm" 
-              variant="secondary" 
+              variant="default" 
               onClick={resetView}
-              className="bg-blue-50 hover:bg-blue-100 border border-blue-200"
+              className="bg-blue-500 hover:bg-blue-600 text-white"
             >
               <ZoomOut className="h-4 w-4 mr-1" />
               全体表示
             </Button>
             <Button 
               size="sm" 
-              variant="secondary" 
+              variant="default" 
               onClick={resetToInitialData}
-              className="bg-purple-50 hover:bg-purple-100 border border-purple-200"
+              className="bg-purple-500 hover:bg-purple-600 text-white"
             >
               <Repeat className="h-4 w-4 mr-1" />
               初期化
@@ -304,10 +304,10 @@ const StoryFlowEditorContent = () => {
           </div>
           
           {selectedNode && (
-            <div className="p-2 bg-white rounded-lg shadow-sm">
+            <div className="p-3 bg-white rounded-lg shadow-md">
               <Button 
                 size="sm" 
-                variant="outline" 
+                variant="destructive" 
                 onClick={deleteSelectedNode}
               >
                 <Trash2 className="h-4 w-4 mr-1" />
