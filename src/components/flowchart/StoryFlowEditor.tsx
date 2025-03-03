@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { 
   ReactFlow, 
@@ -50,20 +49,34 @@ const StoryFlowEditorContent = () => {
   
   const reactFlowInstance = useReactFlow();
   
-  // サンプルデータが表示されない問題を修正するための処理
   useEffect(() => {
-    // ローカルストレージの保存データをクリアする
-    // localStorage.removeItem('storyflow'); // 一時的にコメントアウト
-
-    // タイマーを設定してビューを正しく設定
+    try {
+      const savedFlow = localStorage.getItem('storyflow');
+      if (savedFlow) {
+        const flow = JSON.parse(savedFlow);
+        if (flow.nodes && flow.nodes.length > 0) {
+          setNodes(flow.nodes);
+          setEdges(flow.edges || []);
+          console.log('保存データを読み込みました');
+        } else {
+          console.log('保存データが空のため、初期データを使用します');
+        }
+      } else {
+        console.log('保存データがないため、初期データを使用します');
+      }
+    } catch (error) {
+      console.error('Flow loading error:', error);
+    }
+    
     const timer = setTimeout(() => {
       if (reactFlowInstance) {
         reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: false });
+        console.log('ビューをリセットしました');
       }
-    }, 100);
-
+    }, 300);
+    
     return () => clearTimeout(timer);
-  }, [reactFlowInstance]);
+  }, [reactFlowInstance, setNodes, setEdges]);
   
   const onNodeClick: NodeMouseHandler = useCallback((event, node) => {
     setSelectedNode(node as Node<StoryNodeData>);
@@ -162,29 +175,57 @@ const StoryFlowEditorContent = () => {
           setNodes(flow.nodes || []);
           setEdges(flow.edges || []);
           toast.success('ストーリーフローを読み込みました');
+          
+          setTimeout(() => {
+            reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: false });
+          }, 100);
         } else {
-          // 保存データが空の場合は初期データを表示
           setNodes(initialNodes);
           setEdges(initialEdges);
           toast.success('初期データを読み込みました');
+          
+          setTimeout(() => {
+            reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: false });
+          }, 100);
         }
+      } else {
+        setNodes(initialNodes);
+        setEdges(initialEdges);
+        toast.success('初期データを読み込みました');
+        
+        setTimeout(() => {
+          reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: false });
+        }, 100);
       }
     } catch (error) {
       console.error('Flow loading error:', error);
-      // エラーが発生した場合も初期データを表示
       setNodes(initialNodes);
       setEdges(initialEdges);
       toast.error('読み込みエラーが発生しました。初期データを表示します。');
+      
+      setTimeout(() => {
+        reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: false });
+      }, 100);
     }
-  }, [setNodes, setEdges]);
+  }, [setNodes, setEdges, reactFlowInstance]);
   
-  // 初期ビューを設定するための処理を追加
   const resetView = useCallback(() => {
     if (reactFlowInstance) {
       reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: false });
       toast.success('ビューをリセットしました');
     }
   }, [reactFlowInstance]);
+  
+  const resetToInitialData = useCallback(() => {
+    setNodes(initialNodes);
+    setEdges(initialEdges);
+    
+    setTimeout(() => {
+      reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: false });
+    }, 100);
+    
+    toast.success('初期データに戻しました');
+  }, [setNodes, setEdges, reactFlowInstance]);
   
   return (
     <div className="w-full h-full flex flex-col">
@@ -201,6 +242,7 @@ const StoryFlowEditorContent = () => {
         fitView
         fitViewOptions={{ padding: 0.2 }}
         className="flex-1 bg-gray-50"
+        style={{ width: '100%', height: '100%' }}
         defaultViewport={{ x: 0, y: 0, zoom: 1 }}
       >
         <Controls />
@@ -231,6 +273,10 @@ const StoryFlowEditorContent = () => {
           <Button size="sm" variant="outline" onClick={resetView}>
             <ZoomOut className="h-4 w-4 mr-1" />
             全体表示
+          </Button>
+          <Button size="sm" variant="outline" onClick={resetToInitialData}>
+            <Repeat className="h-4 w-4 mr-1" />
+            初期化
           </Button>
           <Button 
             size="sm" 
