@@ -61,12 +61,21 @@ const StoryFlowEditorContent = () => {
           console.log('保存データを読み込みました');
         } else {
           console.log('保存データが空のため、初期データを使用します');
+          // 初期データの読み込み
+          setNodes(initialNodes);
+          setEdges(initialEdges);
         }
       } else {
         console.log('保存データがないため、初期データを使用します');
+        // 初期データの読み込み
+        setNodes(initialNodes);
+        setEdges(initialEdges);
       }
     } catch (error) {
       console.error('Flow loading error:', error);
+      // エラー時も初期データを使用
+      setNodes(initialNodes);
+      setEdges(initialEdges);
     }
     
     const timer = setTimeout(() => {
@@ -230,133 +239,137 @@ const StoryFlowEditorContent = () => {
   
   return (
     <div className="w-full h-full flex flex-col">
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onNodeClick={onNodeClick}
-        onPaneClick={onPaneClick}
-        onPaneContextMenu={onPaneContextMenu}
-        nodeTypes={nodeTypes}
-        fitView
-        fitViewOptions={{ padding: 0.2 }}
-        className="flex-1 bg-gray-50"
-        style={{ width: '100%', height: '100%' }}
-        defaultViewport={{ x: 0, y: 0, zoom: 1 }}
-      >
-        <Controls position="bottom-right" />
-        <MiniMap 
-          nodeStrokeWidth={3}
-          zoomable
-          pannable
-        />
-        <Background
-          variant={BackgroundVariant.Dots}
-          gap={12}
-          size={1}
-        />
-        
-        <Panel position="top-right" className="flex flex-col gap-2 z-10">
-          <div className="flex gap-2 p-3 bg-white rounded-lg shadow-md mb-2">
-            <Button size="sm" variant="outline" onClick={() => addNewNode('ki')}>
-              <Plus className="h-4 w-4 mr-1" />
-              新シーン
-            </Button>
-            <Button size="sm" variant="outline" onClick={saveFlow}>
-              <Save className="h-4 w-4 mr-1" />
-              保存
-            </Button>
-            <Button size="sm" variant="outline" onClick={loadSavedFlow}>
-              <Repeat className="h-4 w-4 mr-1" />
-              読込
-            </Button>
-          </div>
+      <div className="flex-1" style={{ minHeight: "400px" }}>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onNodeClick={onNodeClick}
+          onPaneClick={onPaneClick}
+          onPaneContextMenu={onPaneContextMenu}
+          nodeTypes={nodeTypes}
+          fitView
+          fitViewOptions={{ padding: 0.2 }}
+          className="bg-gray-50"
+          style={{ width: '100%', height: '100%' }}
+          defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+        >
+          <Controls position="bottom-right" />
+          <MiniMap 
+            nodeStrokeWidth={3}
+            zoomable
+            pannable
+          />
+          <Background
+            variant={BackgroundVariant.Dots}
+            gap={12}
+            size={1}
+          />
           
-          <div className="flex gap-2 p-3 bg-white rounded-lg shadow-md">
-            <Button 
-              size="sm" 
-              variant="default" 
-              onClick={resetView}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
-            >
-              <ZoomOut className="h-4 w-4 mr-1" />
-              全体表示
-            </Button>
-            <Button 
-              size="sm" 
-              variant="default" 
-              onClick={resetToInitialData}
-              className="bg-purple-500 hover:bg-purple-600 text-white"
-            >
-              <Repeat className="h-4 w-4 mr-1" />
-              初期化
-            </Button>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={() => setShowAIAssistant(true)}
-            >
-              <MessageCircle className="h-4 w-4 mr-1" />
-              AIアシスト
-            </Button>
-          </div>
-          
-          {selectedNode && (
-            <div className="p-3 bg-white rounded-lg shadow-md">
+          <Panel position="top-right" className="flex flex-col gap-2 z-10">
+            <div className="flex gap-2 p-3 bg-white rounded-lg shadow-md mb-2">
+              <Button size="sm" variant="outline" onClick={() => addNewNode('ki')}>
+                <Plus className="h-4 w-4 mr-1" />
+                新シーン
+              </Button>
+              <Button size="sm" variant="outline" onClick={saveFlow}>
+                <Save className="h-4 w-4 mr-1" />
+                保存
+              </Button>
+              <Button size="sm" variant="outline" onClick={loadSavedFlow}>
+                <Repeat className="h-4 w-4 mr-1" />
+                読込
+              </Button>
+            </div>
+            
+            <div className="flex gap-2 p-3 bg-white rounded-lg shadow-md">
               <Button 
                 size="sm" 
-                variant="destructive" 
-                onClick={deleteSelectedNode}
+                variant="default" 
+                onClick={resetView}
+                className="bg-blue-500 hover:bg-blue-600 text-white"
               >
-                <Trash2 className="h-4 w-4 mr-1" />
-                削除
+                <ZoomOut className="h-4 w-4 mr-1" />
+                全体表示
               </Button>
+              <Button 
+                size="sm" 
+                variant="default" 
+                onClick={resetToInitialData}
+                className="bg-purple-500 hover:bg-purple-600 text-white"
+              >
+                <Repeat className="h-4 w-4 mr-1" />
+                初期化
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => setShowAIAssistant(true)}
+              >
+                <MessageCircle className="h-4 w-4 mr-1" />
+                AIアシスト
+              </Button>
+            </div>
+            
+            {selectedNode && (
+              <div className="p-3 bg-white rounded-lg shadow-md">
+                <Button 
+                  size="sm" 
+                  variant="destructive" 
+                  onClick={deleteSelectedNode}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  削除
+                </Button>
+              </div>
+            )}
+          </Panel>
+          
+          {showMenu && (
+            <div
+              style={{
+                position: 'absolute',
+                left: menuPosition.x,
+                top: menuPosition.y,
+                zIndex: 10,
+                backgroundColor: 'white',
+                padding: '10px',
+                borderRadius: '5px',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.2)'
+              }}
+            >
+              <div className="flex flex-col gap-2">
+                <Button size="sm" onClick={() => addNewNode('ki')} className="justify-start">
+                  <div className="w-3 h-3 bg-blue-100 border border-blue-500 mr-2"></div>
+                  {nodeTypeColors.ki.label}
+                </Button>
+                <Button size="sm" onClick={() => addNewNode('sho')} className="justify-start">
+                  <div className="w-3 h-3 bg-green-100 border border-green-500 mr-2"></div>
+                  {nodeTypeColors.sho.label}
+                </Button>
+                <Button size="sm" onClick={() => addNewNode('ten')} className="justify-start">
+                  <div className="w-3 h-3 bg-orange-100 border border-orange-500 mr-2"></div>
+                  {nodeTypeColors.ten.label}
+                </Button>
+                <Button size="sm" onClick={() => addNewNode('ketsu')} className="justify-start">
+                  <div className="w-3 h-3 bg-purple-100 border border-purple-500 mr-2"></div>
+                  {nodeTypeColors.ketsu.label}
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setShowMenu(false)}>閉じる</Button>
+              </div>
             </div>
           )}
-        </Panel>
-        
-        {showMenu && (
-          <div
-            style={{
-              position: 'absolute',
-              left: menuPosition.x,
-              top: menuPosition.y,
-              zIndex: 10,
-              backgroundColor: 'white',
-              padding: '10px',
-              borderRadius: '5px',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.2)'
-            }}
-          >
-            <div className="flex flex-col gap-2">
-              <Button size="sm" onClick={() => addNewNode('ki')} className="justify-start">
-                <div className="w-3 h-3 bg-blue-100 border border-blue-500 mr-2"></div>
-                {nodeTypeColors.ki.label}
-              </Button>
-              <Button size="sm" onClick={() => addNewNode('sho')} className="justify-start">
-                <div className="w-3 h-3 bg-green-100 border border-green-500 mr-2"></div>
-                {nodeTypeColors.sho.label}
-              </Button>
-              <Button size="sm" onClick={() => addNewNode('ten')} className="justify-start">
-                <div className="w-3 h-3 bg-orange-100 border border-orange-500 mr-2"></div>
-                {nodeTypeColors.ten.label}
-              </Button>
-              <Button size="sm" onClick={() => addNewNode('ketsu')} className="justify-start">
-                <div className="w-3 h-3 bg-purple-100 border border-purple-500 mr-2"></div>
-                {nodeTypeColors.ketsu.label}
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => setShowMenu(false)}>閉じる</Button>
-            </div>
-          </div>
-        )}
-      </ReactFlow>
+        </ReactFlow>
+      </div>
       
-      <NodeDetailPanel
-        selectedNode={selectedNode}
-        onNodeUpdate={handleNodeUpdate}
-      />
+      <div className="h-40 mt-2 border-t border-gray-200">
+        <NodeDetailPanel
+          selectedNode={selectedNode}
+          onNodeUpdate={handleNodeUpdate}
+        />
+      </div>
 
       <FlowAIAssistant
         isOpen={showAIAssistant}

@@ -10,7 +10,7 @@ const Index = () => {
     <MainLayout>
       <div className="h-full flex flex-col">
         <div className="p-4 pb-0">
-          <Tabs defaultValue="plot" className="w-full">
+          <Tabs defaultValue="plot" className="w-full h-full">
             <TabsList className="grid w-full max-w-md grid-cols-3">
               <TabsTrigger value="plot">プロット作成</TabsTrigger>
               <TabsTrigger value="characters">キャラクター</TabsTrigger>
@@ -20,7 +20,7 @@ const Index = () => {
             <Separator className="my-2" />
             
             <TabsContent value="plot" className="h-[calc(100vh-140px)]">
-              <div className="h-full">
+              <div className="h-full flex flex-col">
                 <StoryFlowEditor />
               </div>
             </TabsContent>
