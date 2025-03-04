@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -140,14 +139,13 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
   if (!selectedNode) {
     return (
       <Card className="w-full h-full">
-        <CardContent className="p-4 flex items-center justify-center h-full">
+        <CardContent className="p-6 flex items-center justify-center h-full">
           <p className="text-gray-500">ノードを選択してください</p>
         </CardContent>
       </Card>
     );
   }
 
-  // ノードタイプに基づいてアイコンを返す
   const getNodeTypeIcon = () => {
     switch (selectedNode.data.type) {
       case 'story': return <BookText className="h-5 w-5 mr-2" />;
@@ -162,7 +160,6 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
     }
   };
 
-  // ノードタイプの名前を返す
   const getNodeTypeName = () => {
     switch (selectedNode.data.type) {
       case 'story': return '物語';
@@ -180,13 +177,13 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
 
   return (
     <Card className="w-full h-full overflow-auto">
-      <CardContent className="p-4">
-        <div className="flex items-center mb-4">
+      <CardContent className="p-6">
+        <div className="flex items-center mb-5">
           {getNodeTypeIcon()}
           <h3 className="text-lg font-medium">{getNodeTypeName()}の詳細</h3>
         </div>
         
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div>
             <Label htmlFor="node-title">タイトル</Label>
             <Input 
@@ -194,6 +191,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
               value={title} 
               onChange={handleTitleChange} 
               placeholder="タイトルを入力" 
+              className="mt-1"
             />
           </div>
           
@@ -204,11 +202,10 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
               value={description} 
               onChange={handleDescriptionChange} 
               placeholder="説明を入力"
-              className="min-h-[80px]"
+              className="min-h-[80px] mt-1"
             />
           </div>
           
-          {/* シーンとアクション用のコンテンツフィールド */}
           {(selectedNode.data.type === 'scene' || selectedNode.data.type === 'action') && (
             <div>
               <Label htmlFor="node-content">内容</Label>
@@ -217,18 +214,17 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
                 value={content} 
                 onChange={handleContentChange} 
                 placeholder="内容を入力"
-                className="min-h-[120px]"
+                className="min-h-[120px] mt-1"
               />
             </div>
           )}
           
-          {/* アクション用の追加フィールド */}
           {selectedNode.data.type === 'action' && (
             <>
               <div>
                 <Label htmlFor="action-type">アクションタイプ</Label>
                 <Select value={actionType} onValueChange={handleActionTypeChange}>
-                  <SelectTrigger>
+                  <SelectTrigger className="mt-1">
                     <SelectValue placeholder="アクションタイプを選択" />
                   </SelectTrigger>
                   <SelectContent>
@@ -247,17 +243,17 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
                   value={character} 
                   onChange={handleCharacterChange} 
                   placeholder="行動するキャラクター" 
+                  className="mt-1"
                 />
               </div>
             </>
           )}
           
-          {/* シーン用の追加フィールド */}
           {selectedNode.data.type === 'scene' && (
             <div>
               <Label htmlFor="scene-phase">段階</Label>
               <Select value={phase} onValueChange={handlePhaseChange}>
-                <SelectTrigger>
+                <SelectTrigger className="mt-1">
                   <SelectValue placeholder="段階を選択" />
                 </SelectTrigger>
                 <SelectContent>
@@ -270,11 +266,10 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
             </div>
           )}
           
-          {/* 登場キャラクター（シーンとアクション用） */}
           {(selectedNode.data.type === 'scene' || selectedNode.data.type === 'storyline' || selectedNode.data.type === 'sequence') && (
             <div>
               <Label htmlFor="node-characters">登場キャラクター</Label>
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-1">
                 <Input 
                   id="node-characters" 
                   value={characterInput} 
@@ -285,7 +280,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
               </div>
               
               {characters.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-2">
+                <div className="flex flex-wrap gap-1 mt-3">
                   {characters.map((char) => (
                     <div 
                       key={char} 
@@ -296,7 +291,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
                       <button 
                         type="button" 
                         onClick={() => handleRemoveCharacter(char)} 
-                        className="text-secondary-foreground/70 hover:text-secondary-foreground"
+                        className="text-secondary-foreground/70 hover:text-secondary-foreground ml-1"
                       >
                         ×
                       </button>
@@ -307,10 +302,9 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
             </div>
           )}
           
-          {/* タグ（全ノード共通） */}
           <div>
             <Label htmlFor="node-tags">タグ</Label>
-            <div className="flex gap-2">
+            <div className="flex gap-2 mt-1">
               <Input 
                 id="node-tags" 
                 value={tagInput} 
@@ -321,7 +315,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
             </div>
             
             {tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
+              <div className="flex flex-wrap gap-1 mt-3">
                 {tags.map((tag) => (
                   <div 
                     key={tag} 
@@ -331,7 +325,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
                     <button 
                       type="button" 
                       onClick={() => handleRemoveTag(tag)} 
-                      className="text-secondary-foreground/70 hover:text-secondary-foreground"
+                      className="text-secondary-foreground/70 hover:text-secondary-foreground ml-1"
                     >
                       ×
                     </button>
