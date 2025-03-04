@@ -367,7 +367,7 @@ const StoryFlowEditorContent = () => {
       console.error('Flow loading error:', error);
       setNodes(initialStoryNodes);
       setEdges(initialStoryEdges);
-      toast.error('読み込みエラーが発生しました。初期データを表示します。');
+      toast.error('読み込み���ラーが発生しました。初期データを表示します。');
       
       setTimeout(() => {
         reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: false });
@@ -396,6 +396,10 @@ const StoryFlowEditorContent = () => {
   const toggleTimeline = useCallback(() => {
     setShowTimeline(prev => !prev);
   }, []);
+  
+  const handleTimelineNodesUpdate = useCallback((updatedNodes: Node<StoryNodeData>[]) => {
+    setNodes(updatedNodes);
+  }, [setNodes]);
   
   return (
     <div className="w-full h-full flex flex-col">
@@ -580,6 +584,7 @@ const StoryFlowEditorContent = () => {
               nodes={nodes} 
               onNodeClick={handleTimelineNodeClick}
               selectedNodeId={selectedNode?.id || null}
+              onNodesUpdate={handleTimelineNodesUpdate}
             />
           </div>
           

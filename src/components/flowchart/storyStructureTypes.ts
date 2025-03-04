@@ -15,6 +15,7 @@ export interface StoryNodeBase {
   characters?: string[];
   notes?: string;
   timePosition?: number; // 時系列上の位置（0-100の値）
+  writingOrder?: number; // 執筆順の位置
   [key: string]: unknown; // インデックスシグネチャを追加
 }
 

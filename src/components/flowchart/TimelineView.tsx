@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Node } from '@xyflow/react';
 import { StoryNodeData } from './storyStructureTypes';
@@ -11,13 +12,17 @@ import {
   Route, 
   Layout,
   BookText,
-  UserCircle
+  UserCircle,
+  MoveVertical
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface TimelineViewProps {
   nodes: Node<StoryNodeData>[];
   onNodeClick: (nodeId: string) => void;
   selectedNodeId: string | null;
+  onNodesUpdate: (updatedNodes: Node<StoryNodeData>[]) => void;
 }
 
 interface TreeNode {
@@ -27,8 +32,16 @@ interface TreeNode {
   isOpen: boolean;
 }
 
-const TimelineView: React.FC<TimelineViewProps> = ({ nodes, onNodeClick, selectedNodeId }) => {
+const TimelineView: React.FC<TimelineViewProps> = ({ 
+  nodes, 
+  onNodeClick, 
+  selectedNodeId,
+  onNodesUpdate 
+}) => {
   const [treeData, setTreeData] = useState<TreeNode[]>([]);
+  const [reorderMode, setReorderMode] = useState(false);
+  const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'time' | 'writing'>('time');
 
   useEffect(() => {
     // ツリー構造を構築
@@ -210,17 +223,102 @@ const TimelineView: React.FC<TimelineViewProps> = ({ nodes, onNodeClick, selecte
     return 'bg-gray-50 border-gray-400 text-gray-800';
   };
 
+  // ドラッグ開始時の処理
+  const handleDragStart = (nodeId: string) => {
+    if (!reorderMode) return;
+    setDraggedNodeId(nodeId);
+  };
+
+  // ドラッグ中にドロップ対象の上にカーソルが来たときの処理
+  const handleDragOver = (e: React.DragEvent, nodeId: string) => {
+    if (!reorderMode || !draggedNodeId || draggedNodeId === nodeId) return;
+    e.preventDefault();
+  };
+
+  // ドロップ時の処理
+  const handleDrop = (e: React.DragEvent, targetNodeId: string) => {
+    if (!reorderMode || !draggedNodeId || draggedNodeId === targetNodeId) return;
+    e.preventDefault();
+    
+    // ドラッグ中のノードと対象ノードを見つける
+    const draggedNode = nodes.find(n => n.id === draggedNodeId);
+    const targetNode = nodes.find(n => n.id === targetNodeId);
+    
+    if (!draggedNode || !targetNode) return;
+    
+    // 同じ階層のノードでない場合は処理しない
+    if (draggedNode.data.type !== targetNode.data.type || draggedNode.data.parentId !== targetNode.data.parentId) {
+      toast.error("同じ階層のノード間でのみ並び替えが可能です");
+      return;
+    }
+    
+    // タイムポジションを入れ替える
+    const updatedNodes = nodes.map(node => {
+      if (node.id === draggedNodeId) {
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            timePosition: targetNode.data.timePosition
+          }
+        };
+      }
+      if (node.id === targetNodeId) {
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            timePosition: draggedNode.data.timePosition
+          }
+        };
+      }
+      return node;
+    });
+    
+    // ノードの更新をStoryFlowEditorに通知
+    onNodesUpdate(updatedNodes);
+    setDraggedNodeId(null);
+    
+    toast.success("ノードの順序を入れ替えました");
+  };
+
+  // ドラッグ終了時の処理
+  const handleDragEnd = () => {
+    setDraggedNodeId(null);
+  };
+
+  const toggleReorderMode = () => {
+    setReorderMode(!reorderMode);
+    if (!reorderMode) {
+      toast.info("ノードをドラッグ＆ドロップで並べ替えできます");
+    }
+  };
+
+  const toggleViewMode = () => {
+    setViewMode(viewMode === 'time' ? 'writing' : 'time');
+    toast.info(`表示モード: ${viewMode === 'time' ? '執筆順' : '時系列順'}`);
+  };
+
   const renderTreeNode = (item: TreeNode, level: number = 0) => {
     const hasChildren = item.children.length > 0;
     
     return (
-      <div key={item.id} className="mb-1">
+      <div 
+        key={item.id} 
+        className="mb-1"
+        draggable={reorderMode}
+        onDragStart={() => handleDragStart(item.id)}
+        onDragOver={(e) => handleDragOver(e, item.id)}
+        onDrop={(e) => handleDrop(e, item.id)}
+        onDragEnd={handleDragEnd}
+      >
         <div 
           className={`
             flex items-center rounded-md pr-2 py-1 
             ${getNodeColor(item.node)}
             ${selectedNodeId === item.id ? 'ring-2 ring-blue-500' : ''}
-            hover:bg-opacity-80 cursor-pointer
+            ${draggedNodeId === item.id ? 'opacity-50' : ''}
+            ${reorderMode ? 'cursor-grab' : 'hover:bg-opacity-80 cursor-pointer'}
           `}
           style={{ paddingLeft: `${level * 8 + 4}px` }}
         >
@@ -245,7 +343,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({ nodes, onNodeClick, selecte
             <span className="mr-1">{getNodeIcon(item.node)}</span>
             <span className="font-medium truncate">{item.node.data.title}</span>
             {typeof item.node.data.timePosition === 'number' && (
-              <span className="ml-1 text-xs opacity-50">({item.node.data.timePosition})</span>
+              <span className="ml-1 text-xs opacity-50">({viewMode === 'time' ? 'T:' : 'W:'}{item.node.data.timePosition})</span>
             )}
           </div>
         </div>
@@ -264,8 +362,29 @@ const TimelineView: React.FC<TimelineViewProps> = ({ nodes, onNodeClick, selecte
       <div className="flex items-center justify-between px-4 py-2">
         <h3 className="text-sm font-medium flex items-center">
           <Clock className="h-4 w-4 mr-1" />
-          時系列ツリービュー
+          {viewMode === 'time' ? '時系列ツリービュー' : '執筆順ツリービュー'}
         </h3>
+        
+        <div className="flex space-x-2">
+          <Button 
+            size="sm" 
+            variant={reorderMode ? "default" : "outline"} 
+            onClick={toggleReorderMode}
+            className={reorderMode ? "h-7 text-xs" : "h-7 text-xs"}
+          >
+            <MoveVertical className="h-3 w-3 mr-1" />
+            並替
+          </Button>
+          
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={toggleViewMode}
+            className="h-7 text-xs"
+          >
+            {viewMode === 'time' ? '執筆順' : '時系列順'}
+          </Button>
+        </div>
       </div>
       
       <ScrollArea className="h-[calc(100%-40px)]">
