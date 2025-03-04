@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { 
   ReactFlow, 
@@ -15,7 +16,8 @@ import {
   NodeMouseHandler,
   ReactFlowProvider,
   Edge,
-  Connection
+  Connection,
+  NodeChange
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { initialStoryNodes, initialStoryEdges } from './storyTreeData';
@@ -95,6 +97,42 @@ const StoryFlowEditorContent = () => {
     return () => clearTimeout(timer);
   }, [reactFlowInstance, setNodes, setEdges]);
   
+  // ノードのドラッグ時の処理を拡張
+  const handleNodesChange = useCallback((changes: NodeChange[]) => {
+    // 標準の変更を適用
+    onNodesChange(changes);
+    
+    // 位置の変更を見つける
+    const positionChanges = changes.filter(
+      change => change.type === 'position' && change.dragging
+    );
+    
+    if (positionChanges.length > 0) {
+      positionChanges.forEach(change => {
+        if (change.type === 'position' && change.dragging) {
+          const parentId = change.id;
+          const dx = change.position?.x || 0;
+          const dy = change.position?.y || 0;
+          
+          // 親ノードの子ノードを探して一緒に動かす
+          setNodes(nds => {
+            return nds.map(node => {
+              // 子ノードの場合、親ノードと一緒に移動
+              if (node.data.parentId === parentId) {
+                // 元の位置からの差分を計算
+                node.position = {
+                  x: node.position.x + dx,
+                  y: node.position.y + dy
+                };
+              }
+              return node;
+            });
+          });
+        }
+      });
+    }
+  }, [onNodesChange, setNodes]);
+  
   const onNodeClick: NodeMouseHandler = useCallback((event, node) => {
     setSelectedNode(node as Node<StoryNodeData>);
   }, []);
@@ -153,13 +191,8 @@ const StoryFlowEditorContent = () => {
         title: `新しい${getNodeTypeLabel(type)}`,
         description: '',
         phase: 'ki',
+        timePosition: 0,
         ...(parentId ? { parentId } : {}),
-        ...(type === 'scene' ? { content: '' } : {}),
-        ...(type === 'action' ? { 
-          actionType: 'action',
-          character: '',
-          content: '' 
-        } : {}),
       } as StoryNodeData,
     };
     
@@ -329,7 +362,7 @@ const StoryFlowEditorContent = () => {
         <ReactFlow
           nodes={nodes}
           edges={edges}
-          onNodesChange={onNodesChange}
+          onNodesChange={handleNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           onNodeClick={onNodeClick}

@@ -1,3 +1,4 @@
+
 import { Node, Edge, MarkerType } from '@xyflow/react';
 import { StoryNodeData } from './storyStructureTypes';
 
@@ -22,7 +23,8 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
       title: 'ストーリーライン構成',
       description: 'あなたの物語の全体的なテーマと目的',
       tags: ['ファンタジー', '冒険'],
-    },
+      timePosition: 0,
+    } as StoryNodeData,
   },
   
   // ストーリーライン（複数のストーリーラインが1つの物語を構成）
@@ -37,7 +39,22 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
       title: '主人公の冒険',
       description: '主人公が異世界で力を得て成長する物語',
       phase: 'ki',
-    },
+      timePosition: 10,
+    } as StoryNodeData,
+  },
+  {
+    id: storylineId2,
+    type: 'storyNode',
+    position: { x: 600, y: 200 },
+    data: { 
+      id: storylineId2,
+      type: 'storyline',
+      parentId: storyId,
+      title: '仲間との冒険',
+      description: '仲間たちとの交流と成長',
+      phase: 'sho',
+      timePosition: 20,
+    } as StoryNodeData,
   },
   
   // シークエンス（1つのストーリーラインは複数のシークエンスで構成）
@@ -52,7 +69,8 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
       title: '異世界への旅立ち',
       description: '主人公が異世界へ召喚され、初めての試練に直面する',
       phase: 'ki',
-    },
+      timePosition: 15,
+    } as StoryNodeData,
   },
   {
     id: sequenceId2,
@@ -65,7 +83,8 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
       title: '仲間との出会い',
       description: '主人公が冒険の仲間と出会い、初めて協力して戦う',
       phase: 'sho',
-    },
+      timePosition: 25,
+    } as StoryNodeData,
   },
   
   // シーン（1つのシークエンスは複数のシーンで構成）
@@ -83,7 +102,7 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
       content: '',
       characters: ['主人公'],
       timePosition: 0,
-    },
+    } as StoryNodeData,
   },
   {
     id: 'scene-2',
@@ -99,7 +118,7 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
       content: '',
       characters: ['主人公', '案内人'],
       timePosition: 20,
-    },
+    } as StoryNodeData,
   },
   {
     id: 'scene-3',
@@ -115,7 +134,7 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
       content: '',
       characters: ['主人公', '魔法使い'],
       timePosition: 40,
-    },
+    } as StoryNodeData,
   },
   {
     id: 'scene-4',
@@ -131,7 +150,7 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
       content: '',
       characters: ['主人公', '魔法使い', 'モンスター'],
       timePosition: 60,
-    },
+    } as StoryNodeData,
   },
   
   // アクション（シーンの中の具体的な行動）
@@ -149,7 +168,7 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
       character: '主人公',
       content: '太郎は静かな図書館で本を読んでいた。突然、ページから金色の光が漏れ出し、彼の体を包み込んだ。',
       timePosition: 10,
-    },
+    } as StoryNodeData,
   },
   {
     id: 'action-2',
@@ -165,7 +184,7 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
       character: '案内人',
       content: '「ようこそ、勇者様。あなたは預言通り、我々の世界を救うためにやってきたのです」',
       timePosition: 30,
-    },
+    } as StoryNodeData,
   },
 ];
 

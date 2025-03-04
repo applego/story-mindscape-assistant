@@ -56,7 +56,15 @@ const TimelineView: React.FC<TimelineViewProps> = ({ nodes, onNodeClick, selecte
         // 関連するストーリーラインを追加
         storylineNodes
           .filter(node => node.data.parentId === storyNode.id)
-          .sort((a, b) => a.position.x - b.position.x)
+          .sort((a, b) => {
+            // タイムポジションがある場合はそれを使用
+            const aTime = typeof a.data.timePosition === 'number' ? a.data.timePosition : 0;
+            const bTime = typeof b.data.timePosition === 'number' ? b.data.timePosition : 0;
+            if (aTime !== bTime) {
+              return aTime - bTime;
+            }
+            return a.position.x - b.position.x;
+          })
           .forEach(storylineNode => {
             const storylineItem: TreeNode = {
               id: storylineNode.id,
@@ -68,7 +76,15 @@ const TimelineView: React.FC<TimelineViewProps> = ({ nodes, onNodeClick, selecte
             // 関連するシークエンスを追加
             sequenceNodes
               .filter(node => node.data.parentId === storylineNode.id)
-              .sort((a, b) => a.position.x - b.position.x)
+              .sort((a, b) => {
+                // タイムポジションがある場合はそれを使用
+                const aTime = typeof a.data.timePosition === 'number' ? a.data.timePosition : 0;
+                const bTime = typeof b.data.timePosition === 'number' ? b.data.timePosition : 0;
+                if (aTime !== bTime) {
+                  return aTime - bTime;
+                }
+                return a.position.x - b.position.x;
+              })
               .forEach(sequenceNode => {
                 const sequenceItem: TreeNode = {
                   id: sequenceNode.id,
@@ -82,9 +98,10 @@ const TimelineView: React.FC<TimelineViewProps> = ({ nodes, onNodeClick, selecte
                   .filter(node => node.data.parentId === sequenceNode.id)
                   .sort((a, b) => {
                     // タイムポジションがある場合はそれを使用
-                    if ('timePosition' in a.data && 'timePosition' in b.data && 
-                        a.data.timePosition !== undefined && b.data.timePosition !== undefined) {
-                      return a.data.timePosition - b.data.timePosition;
+                    const aTime = typeof a.data.timePosition === 'number' ? a.data.timePosition : 0;
+                    const bTime = typeof b.data.timePosition === 'number' ? b.data.timePosition : 0;
+                    if (aTime !== bTime) {
+                      return aTime - bTime;
                     }
                     return a.position.x - b.position.x;
                   })
@@ -101,9 +118,10 @@ const TimelineView: React.FC<TimelineViewProps> = ({ nodes, onNodeClick, selecte
                       .filter(node => node.data.parentId === sceneNode.id)
                       .sort((a, b) => {
                         // タイムポジションがある場合はそれを使用
-                        if ('timePosition' in a.data && 'timePosition' in b.data && 
-                            a.data.timePosition !== undefined && b.data.timePosition !== undefined) {
-                          return a.data.timePosition - b.data.timePosition;
+                        const aTime = typeof a.data.timePosition === 'number' ? a.data.timePosition : 0;
+                        const bTime = typeof b.data.timePosition === 'number' ? b.data.timePosition : 0;
+                        if (aTime !== bTime) {
+                          return aTime - bTime;
                         }
                         return a.position.x - b.position.x;
                       })
@@ -200,7 +218,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({ nodes, onNodeClick, selecte
       <div key={item.id} className="mb-1">
         <div 
           className={`
-            flex items-center rounded-md pl-${level * 2} pr-2 py-1 
+            flex items-center rounded-md pr-2 py-1 
             ${getNodeColor(item.node)}
             ${selectedNodeId === item.id ? 'ring-2 ring-blue-500' : ''}
             hover:bg-opacity-80 cursor-pointer
@@ -227,6 +245,9 @@ const TimelineView: React.FC<TimelineViewProps> = ({ nodes, onNodeClick, selecte
           >
             <span className="mr-1">{getNodeIcon(item.node)}</span>
             <span className="font-medium truncate">{item.node.data.title}</span>
+            {typeof item.node.data.timePosition === 'number' && (
+              <span className="ml-1 text-xs opacity-50">({item.node.data.timePosition})</span>
+            )}
           </div>
         </div>
         

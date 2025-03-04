@@ -14,7 +14,7 @@ export interface StoryNodeBase {
   tags?: string[];
   characters?: string[];
   notes?: string;
-  [key: string]: unknown; // TypeScriptの Record<string, unknown> 互換のためのインデックスシグネチャ
+  timePosition?: number; // 時系列上の位置（0-100の値）
 }
 
 export interface StoryData extends StoryNodeBase {
@@ -23,30 +23,26 @@ export interface StoryData extends StoryNodeBase {
 
 export interface StorylineData extends StoryNodeBase {
   type: 'storyline';
-  parentId: string; // 親ストーリーのID
+  parentId?: string; // 親ストーリーのID
 }
 
 export interface SequenceData extends StoryNodeBase {
   type: 'sequence';
-  parentId: string; // 親ストーリーラインのID
+  parentId?: string; // 親ストーリーラインのID
 }
 
 export interface SceneData extends StoryNodeBase {
   type: 'scene';
-  parentId: string; // 親シークエンスのID
-  content: string;
-  // 時系列情報の追加
-  timePosition?: number; // 時系列上の位置（0-100の値）
+  parentId?: string; // 親シークエンスのID
+  content?: string;
 }
 
 export interface ActionData extends StoryNodeBase {
   type: 'action';
-  parentId: string; // 親シーンのID
-  actionType: 'action' | 'reaction' | 'dialogue' | 'thought';
-  character: string; // 行動するキャラクター
-  content: string;
-  // 時系列情報の追加
-  timePosition?: number; // 時系列上の位置（0-100の値）
+  parentId?: string; // 親シーンのID
+  actionType?: 'action' | 'reaction' | 'dialogue' | 'thought';
+  character?: string; // 行動するキャラクター
+  content?: string;
 }
 
 export type StoryNodeData = 

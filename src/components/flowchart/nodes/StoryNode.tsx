@@ -1,7 +1,7 @@
 import { memo, useState } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { cn } from '@/lib/utils';
-import { MoreHorizontal, Edit2, UserCircle, BookText, Route, Layout, Film, MessageCircle } from 'lucide-react';
+import { MoreHorizontal, Edit2, UserCircle, BookText, Route, Layout, Film, MessageCircle, Clock } from 'lucide-react';
 import { StoryNodeData } from '../storyStructureTypes';
 
 interface StoryNodeProps {
@@ -137,6 +137,13 @@ const StoryNode = ({ id, data, isConnectable, selected }: StoryNodeProps) => {
             説明を追加...
           </span>
         }
+        
+        {typeof data.timePosition === 'number' && data.timePosition > 0 && (
+          <div className="mt-2 text-xs flex items-center text-gray-500">
+            <Clock size={12} className="mr-1" />
+            時系列位置: {data.timePosition}
+          </div>
+        )}
       </div>
       
       {data.characters && data.characters.length > 0 && (
