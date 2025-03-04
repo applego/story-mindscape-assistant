@@ -181,16 +181,16 @@ const StoryFlowEditorContent = () => {
     toast.success(`新しい${getNodeTypeLabel(type)}を作成しました`);
   }, [menuPosition, setNodes, setEdges]);
   
-  const getNodeTypeLabel = (type: string) => {
+  const getNodeTypeLabel = useCallback((type: string) => {
     switch (type) {
-      case 'story': return '物語';
+      case 'story': return 'ストーリーライン構成';
       case 'storyline': return 'ストーリーライン';
       case 'sequence': return 'シークエンス';
       case 'scene': return 'シーン';
       case 'action': return 'アクション';
       default: return 'ノード';
     }
-  };
+  }, []);
   
   const handleNodeUpdate = useCallback((nodeId: string, newData: Partial<StoryNodeData>) => {
     setNodes((nds) => {
@@ -358,7 +358,7 @@ const StoryFlowEditorContent = () => {
             <div className="flex gap-2 p-3 bg-white rounded-lg shadow-md mb-2">
               <Button size="sm" variant="outline" onClick={() => addNewNode('story')}>
                 <BookText className="h-4 w-4 mr-1" />
-                物語
+                ストーリーライン構成
               </Button>
               <Button size="sm" variant="outline" onClick={saveFlow}>
                 <Save className="h-4 w-4 mr-1" />
@@ -375,7 +375,7 @@ const StoryFlowEditorContent = () => {
                 className={showTimeline ? "bg-blue-500 hover:bg-blue-600 text-white" : ""}
               >
                 <Clock className="h-4 w-4 mr-1" />
-                時系列
+                ツリー
               </Button>
             </div>
             
@@ -438,7 +438,7 @@ const StoryFlowEditorContent = () => {
               <div className="flex flex-col gap-2">
                 <Button size="sm" onClick={() => addNewNode('story')} className="justify-start">
                   <BookText size={14} className="mr-2" />
-                  物語
+                  ストーリーライン構成
                 </Button>
                 <Button size="sm" onClick={() => addNewNode('storyline')} className="justify-start">
                   <Route size={14} className="mr-2" />

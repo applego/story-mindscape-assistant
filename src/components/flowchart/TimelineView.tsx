@@ -3,7 +3,17 @@ import React, { useEffect, useState } from 'react';
 import { Node } from '@xyflow/react';
 import { StoryNodeData } from './storyStructureTypes';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Clock, ArrowRight } from 'lucide-react';
+import { 
+  Clock, 
+  ArrowRight, 
+  ChevronRight, 
+  ChevronDown, 
+  Film, 
+  Route, 
+  Layout,
+  BookText,
+  UserCircle
+} from 'lucide-react';
 
 interface TimelineViewProps {
   nodes: Node<StoryNodeData>[];
@@ -11,61 +21,222 @@ interface TimelineViewProps {
   selectedNodeId: string | null;
 }
 
+interface TreeNode {
+  id: string;
+  node: Node<StoryNodeData>;
+  children: TreeNode[];
+  isOpen: boolean;
+}
+
 const TimelineView: React.FC<TimelineViewProps> = ({ nodes, onNodeClick, selectedNodeId }) => {
-  const [timelineNodes, setTimelineNodes] = useState<Node<StoryNodeData>[]>([]);
+  const [treeData, setTreeData] = useState<TreeNode[]>([]);
 
   useEffect(() => {
-    // シーンとアクションのノードだけをフィルタリング
-    const filteredNodes = nodes.filter(
-      (node) => node.data.type === 'scene' || node.data.type === 'action'
-    );
-
-    // 親子関係を考慮してソート
-    const sortedNodes = [...filteredNodes].sort((a, b) => {
-      // 同じ親を持つノード同士を比較
-      if (a.data.parentId === b.data.parentId) {
-        // timePositionがある場合はそれを使用
-        if ('timePosition' in a.data && 'timePosition' in b.data && 
-            a.data.timePosition !== undefined && b.data.timePosition !== undefined) {
-          return a.data.timePosition - b.data.timePosition;
-        }
-        // そうでなければポジションのX座標でソート
-        return a.position.x - b.position.x;
-      }
+    // ツリー構造を構築
+    const buildTree = () => {
+      // ノードをタイプでグループ化
+      const storyNodes = nodes.filter(node => node.data.type === 'story');
+      const storylineNodes = nodes.filter(node => node.data.type === 'storyline');
+      const sequenceNodes = nodes.filter(node => node.data.type === 'sequence');
+      const sceneNodes = nodes.filter(node => node.data.type === 'scene');
+      const actionNodes = nodes.filter(node => node.data.type === 'action');
       
-      // 親が異なる場合はシーン→アクションの順にする
-      if (a.data.type === 'scene' && b.data.type === 'action') return -1;
-      if (a.data.type === 'action' && b.data.type === 'scene') return 1;
+      // ツリーを構築
+      const tree: TreeNode[] = [];
       
-      return 0;
-    });
-
-    setTimelineNodes(sortedNodes);
+      // 物語ノードを追加
+      storyNodes.forEach(storyNode => {
+        const storyItem: TreeNode = {
+          id: storyNode.id,
+          node: storyNode,
+          children: [],
+          isOpen: true
+        };
+        
+        // 関連するストーリーラインを追加
+        storylineNodes
+          .filter(node => node.data.parentId === storyNode.id)
+          .sort((a, b) => a.position.x - b.position.x)
+          .forEach(storylineNode => {
+            const storylineItem: TreeNode = {
+              id: storylineNode.id,
+              node: storylineNode,
+              children: [],
+              isOpen: true
+            };
+            
+            // 関連するシークエンスを追加
+            sequenceNodes
+              .filter(node => node.data.parentId === storylineNode.id)
+              .sort((a, b) => a.position.x - b.position.x)
+              .forEach(sequenceNode => {
+                const sequenceItem: TreeNode = {
+                  id: sequenceNode.id,
+                  node: sequenceNode,
+                  children: [],
+                  isOpen: true
+                };
+                
+                // 関連するシーンを追加
+                sceneNodes
+                  .filter(node => node.data.parentId === sequenceNode.id)
+                  .sort((a, b) => {
+                    // タイムポジションがある場合はそれを使用
+                    if ('timePosition' in a.data && 'timePosition' in b.data && 
+                        a.data.timePosition !== undefined && b.data.timePosition !== undefined) {
+                      return a.data.timePosition - b.data.timePosition;
+                    }
+                    return a.position.x - b.position.x;
+                  })
+                  .forEach(sceneNode => {
+                    const sceneItem: TreeNode = {
+                      id: sceneNode.id,
+                      node: sceneNode,
+                      children: [],
+                      isOpen: true
+                    };
+                    
+                    // 関連するアクションを追加
+                    actionNodes
+                      .filter(node => node.data.parentId === sceneNode.id)
+                      .sort((a, b) => {
+                        // タイムポジションがある場合はそれを使用
+                        if ('timePosition' in a.data && 'timePosition' in b.data && 
+                            a.data.timePosition !== undefined && b.data.timePosition !== undefined) {
+                          return a.data.timePosition - b.data.timePosition;
+                        }
+                        return a.position.x - b.position.x;
+                      })
+                      .forEach(actionNode => {
+                        sceneItem.children.push({
+                          id: actionNode.id,
+                          node: actionNode,
+                          children: [],
+                          isOpen: true
+                        });
+                      });
+                    
+                    sequenceItem.children.push(sceneItem);
+                  });
+                
+                storylineItem.children.push(sequenceItem);
+              });
+            
+            storyItem.children.push(storylineItem);
+          });
+        
+        tree.push(storyItem);
+      });
+      
+      return tree;
+    };
+    
+    setTreeData(buildTree());
   }, [nodes]);
 
-  const getNodeColor = (node: Node<StoryNodeData>) => {
-    if (node.data.type === 'scene') {
-      if (node.data.phase === 'ki') return 'bg-blue-100 border-blue-400';
-      if (node.data.phase === 'sho') return 'bg-green-100 border-green-400';
-      if (node.data.phase === 'ten') return 'bg-orange-100 border-orange-400';
-      if (node.data.phase === 'ketsu') return 'bg-purple-100 border-purple-400';
-      return 'bg-cyan-100 border-cyan-400';
-    } else if (node.data.type === 'action') {
-      if (node.data.actionType === 'dialogue') return 'bg-yellow-100 border-yellow-400';
-      if (node.data.actionType === 'reaction') return 'bg-pink-100 border-pink-400';
-      if (node.data.actionType === 'thought') return 'bg-indigo-100 border-indigo-400';
-      return 'bg-yellow-100 border-yellow-400';
-    }
-    return 'bg-gray-100 border-gray-400';
+  const toggleNode = (nodeId: string) => {
+    const updateNodeOpenState = (items: TreeNode[]): TreeNode[] => {
+      return items.map(item => {
+        if (item.id === nodeId) {
+          return { ...item, isOpen: !item.isOpen };
+        }
+        
+        if (item.children.length > 0) {
+          return { ...item, children: updateNodeOpenState(item.children) };
+        }
+        
+        return item;
+      });
+    };
+    
+    setTreeData(updateNodeOpenState(treeData));
   };
 
   const getNodeIcon = (node: Node<StoryNodeData>) => {
-    if (node.data.type === 'scene') {
-      return <Clock className="h-3 w-3 mr-1" />;
-    } else if (node.data.type === 'action' && 'actionType' in node.data && node.data.actionType === 'dialogue') {
-      return <ArrowRight className="h-3 w-3 mr-1" />;
+    const type = node.data.type;
+    
+    switch (type) {
+      case 'story': return <BookText size={14} className="min-w-[14px]" />;
+      case 'storyline': return <Route size={14} className="min-w-[14px]" />;
+      case 'sequence': return <Layout size={14} className="min-w-[14px]" />;
+      case 'scene': return <Film size={14} className="min-w-[14px]" />;
+      case 'action': 
+        if ('actionType' in node.data && node.data.actionType === 'dialogue') {
+          return <ArrowRight size={14} className="min-w-[14px]" />;
+        }
+        return <UserCircle size={14} className="min-w-[14px]" />;
+      default: return <Clock size={14} className="min-w-[14px]" />;
     }
-    return <ArrowRight className="h-3 w-3 mr-1" />;
+  };
+
+  const getNodeColor = (node: Node<StoryNodeData>) => {
+    if (node.data.type === 'scene') {
+      if (node.data.phase === 'ki') return 'bg-blue-50 border-blue-400 text-blue-800';
+      if (node.data.phase === 'sho') return 'bg-green-50 border-green-400 text-green-800';
+      if (node.data.phase === 'ten') return 'bg-orange-50 border-orange-400 text-orange-800';
+      if (node.data.phase === 'ketsu') return 'bg-purple-50 border-purple-400 text-purple-800';
+      return 'bg-cyan-50 border-cyan-400 text-cyan-800';
+    } else if (node.data.type === 'action') {
+      if ('actionType' in node.data) {
+        if (node.data.actionType === 'dialogue') return 'bg-yellow-50 border-yellow-400 text-yellow-800';
+        if (node.data.actionType === 'reaction') return 'bg-pink-50 border-pink-400 text-pink-800';
+        if (node.data.actionType === 'thought') return 'bg-indigo-50 border-indigo-400 text-indigo-800';
+      }
+      return 'bg-yellow-50 border-yellow-400 text-yellow-800';
+    } else if (node.data.type === 'story') {
+      return 'bg-indigo-50 border-indigo-400 text-indigo-800';
+    } else if (node.data.type === 'storyline') {
+      return 'bg-blue-50 border-blue-400 text-blue-800';
+    } else if (node.data.type === 'sequence') {
+      return 'bg-green-50 border-green-400 text-green-800';
+    }
+    return 'bg-gray-50 border-gray-400 text-gray-800';
+  };
+
+  const renderTreeNode = (item: TreeNode, level: number = 0) => {
+    const hasChildren = item.children.length > 0;
+    
+    return (
+      <div key={item.id} className="mb-1">
+        <div 
+          className={`
+            flex items-center rounded-md pl-${level * 2} pr-2 py-1 
+            ${getNodeColor(item.node)}
+            ${selectedNodeId === item.id ? 'ring-2 ring-blue-500' : ''}
+            hover:bg-opacity-80 cursor-pointer
+          `}
+          style={{ paddingLeft: `${level * 8 + 4}px` }}
+        >
+          {hasChildren && (
+            <button 
+              onClick={(e) => { 
+                e.stopPropagation();
+                toggleNode(item.id);
+              }}
+              className="mr-1 p-0.5 rounded hover:bg-white/30"
+            >
+              {item.isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            </button>
+          )}
+          
+          {!hasChildren && <div className="w-5"></div>}
+          
+          <div 
+            className="flex items-center flex-1 min-w-0 text-xs"
+            onClick={() => onNodeClick(item.id)}
+          >
+            <span className="mr-1">{getNodeIcon(item.node)}</span>
+            <span className="font-medium truncate">{item.node.data.title}</span>
+          </div>
+        </div>
+        
+        {item.isOpen && hasChildren && (
+          <div className="ml-4 pl-2 border-l border-gray-200">
+            {item.children.map(child => renderTreeNode(child, level + 1))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -73,58 +244,21 @@ const TimelineView: React.FC<TimelineViewProps> = ({ nodes, onNodeClick, selecte
       <div className="flex items-center justify-between px-4 py-2">
         <h3 className="text-sm font-medium flex items-center">
           <Clock className="h-4 w-4 mr-1" />
-          時系列ビュー
+          時系列ツリービュー
         </h3>
       </div>
       
       <ScrollArea className="h-[calc(100%-40px)]">
         <div className="px-4 pb-4">
-          <div className="relative">
-            {/* 時間軸 */}
-            <div className="absolute left-0 top-3 bottom-0 w-0.5 bg-gray-300 z-0"></div>
-            
-            {/* ノード */}
-            <div className="space-y-2 relative z-10">
-              {timelineNodes.map((node) => (
-                <div
-                  key={node.id}
-                  className={`
-                    ml-4 pl-3 pr-2 py-1.5 rounded-md border text-xs 
-                    ${getNodeColor(node)}
-                    ${selectedNodeId === node.id ? 'ring-2 ring-blue-500' : ''}
-                    cursor-pointer hover:shadow-sm transition-shadow
-                  `}
-                  onClick={() => onNodeClick(node.id)}
-                >
-                  <div className="absolute left-0 top-[50%] w-4 h-px bg-gray-300"></div>
-                  <div className="absolute left-[-5px] top-[50%] transform -translate-y-1/2 w-2.5 h-2.5 rounded-full border border-gray-400 bg-white"></div>
-                  
-                  <div className="flex items-center">
-                    {getNodeIcon(node)}
-                    <span className="font-medium">{node.data.title}</span>
-                  </div>
-                  
-                  {node.data.description && (
-                    <p className="text-gray-600 mt-1 line-clamp-2">
-                      {node.data.description}
-                    </p>
-                  )}
-                  
-                  {'characters' in node.data && node.data.characters && node.data.characters.length > 0 && (
-                    <div className="mt-1 text-[10px] text-gray-500">
-                      登場: {node.data.characters.join(', ')}
-                    </div>
-                  )}
-                </div>
-              ))}
-              
-              {timelineNodes.length === 0 && (
-                <div className="ml-4 py-3 text-gray-500 text-xs italic">
-                  シーン/アクションが追加されていません
-                </div>
-              )}
+          {treeData.length > 0 ? (
+            <div className="space-y-1">
+              {treeData.map(item => renderTreeNode(item))}
             </div>
-          </div>
+          ) : (
+            <div className="py-3 text-gray-500 text-xs italic">
+              ノードが追加されていません
+            </div>
+          )}
         </div>
       </ScrollArea>
     </div>

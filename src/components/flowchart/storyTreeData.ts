@@ -1,4 +1,3 @@
-
 import { Node, Edge, MarkerType } from '@xyflow/react';
 import { StoryNodeData } from './storyStructureTypes';
 
@@ -20,7 +19,7 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
     data: { 
       id: storyId,
       type: 'story',
-      title: '物語のタイトル',
+      title: 'ストーリーライン構成',
       description: 'あなたの物語の全体的なテーマと目的',
       tags: ['ファンタジー', '冒険'],
     },
@@ -38,19 +37,6 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
       title: '主人公の冒険',
       description: '主人公が異世界で力を得て成長する物語',
       phase: 'ki',
-    },
-  },
-  {
-    id: storylineId2,
-    type: 'storyNode',
-    position: { x: 600, y: 200 },
-    data: { 
-      id: storylineId2,
-      type: 'storyline',
-      parentId: storyId,
-      title: '仲間との絆',
-      description: '主人公と仲間たちの関係性が発展する副筋',
-      phase: 'sho',
     },
   },
   

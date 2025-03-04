@@ -1,4 +1,3 @@
-
 import { memo, useState } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { cn } from '@/lib/utils';
@@ -15,11 +14,9 @@ interface StoryNodeProps {
 const StoryNode = ({ id, data, isConnectable, selected }: StoryNodeProps) => {
   const [isHovered, setIsHovered] = useState(false);
   
-  // ノードタイプに基づくスタイルを決定
   const getBgColor = () => {
     const nodeType = data.type;
     
-    // ノードタイプごとの背景色
     switch (nodeType) {
       case 'story': return 'bg-indigo-50 border-indigo-400';
       case 'storyline': return 'bg-blue-50 border-blue-400';
@@ -38,7 +35,6 @@ const StoryNode = ({ id, data, isConnectable, selected }: StoryNodeProps) => {
   const getHeaderColor = () => {
     const nodeType = data.type;
     
-    // ノードタイプごとのヘッダー色
     switch (nodeType) {
       case 'story': return 'bg-indigo-100';
       case 'storyline': return 'bg-blue-100';
@@ -54,7 +50,6 @@ const StoryNode = ({ id, data, isConnectable, selected }: StoryNodeProps) => {
     }
   };
 
-  // ノードタイプに基づくアイコンを決定
   const getNodeIcon = () => {
     const nodeType = data.type;
     
@@ -74,8 +69,8 @@ const StoryNode = ({ id, data, isConnectable, selected }: StoryNodeProps) => {
     const nodeType = data.type;
     
     switch (nodeType) {
-      case 'story': return '物語';
-      case 'storyline': return 'ストーリー';
+      case 'story': return 'ストーリーライン構成';
+      case 'storyline': return 'ストーリーライン';
       case 'sequence': return 'シークエンス';
       case 'scene': return 'シーン';
       case 'action': 
