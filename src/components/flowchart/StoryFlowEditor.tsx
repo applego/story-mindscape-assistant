@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { 
   ReactFlow, 
@@ -23,6 +22,7 @@ import { initialStoryNodes, initialStoryEdges } from './storyTreeData';
 import StoryNode from './nodes/StoryNode';
 import FlowAIAssistant from './FlowAIAssistant';
 import NodeDetailPanel from './NodeDetailPanel';
+import TimelineView from './TimelineView';
 import { nodeTypeColors } from './storyFlowStyles';
 import { Button } from '@/components/ui/button';
 import { 
@@ -38,7 +38,9 @@ import {
   Route,
   Layout,
   Film,
-  UserCircle
+  UserCircle,
+  Clock,
+  ArrowDownUp
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { StoryNodeData, FlowStoryNode } from './storyStructureTypes';
@@ -54,6 +56,7 @@ const StoryFlowEditorContent = () => {
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
   const [showMenu, setShowMenu] = useState(false);
   const [showAIAssistant, setShowAIAssistant] = useState(false);
+  const [showTimeline, setShowTimeline] = useState(true);
   
   const reactFlowInstance = useReactFlow();
   
@@ -68,19 +71,16 @@ const StoryFlowEditorContent = () => {
           console.log('保存データを読み込みました');
         } else {
           console.log('保存データが空のため、初期データを使用します');
-          // 初期データの読み込み
           setNodes(initialStoryNodes);
           setEdges(initialStoryEdges);
         }
       } else {
         console.log('保存データがないため、初期データを使用します');
-        // 初期データの読み込み
         setNodes(initialStoryNodes);
         setEdges(initialStoryEdges);
       }
     } catch (error) {
       console.error('Flow loading error:', error);
-      // エラー時も初期データを使用
       setNodes(initialStoryNodes);
       setEdges(initialStoryEdges);
     }
@@ -98,6 +98,14 @@ const StoryFlowEditorContent = () => {
   const onNodeClick: NodeMouseHandler = useCallback((event, node) => {
     setSelectedNode(node as Node<StoryNodeData>);
   }, []);
+  
+  const handleTimelineNodeClick = useCallback((nodeId: string) => {
+    const node = nodes.find(n => n.id === nodeId);
+    if (node) {
+      setSelectedNode(node);
+      reactFlowInstance.setCenter(node.position.x, node.position.y, { zoom: 1.5, duration: 800 });
+    }
+  }, [nodes, reactFlowInstance]);
   
   const onConnect = useCallback((params: Connection) => {
     const newEdge = {
@@ -157,7 +165,6 @@ const StoryFlowEditorContent = () => {
     
     setNodes((nds) => [...nds, newNode]);
     
-    // 親ノードが指定されている場合は、親ノードとの接続も作成
     if (parentId) {
       const newEdge = {
         id: `edge-${parentId}-${newNode.id}`,
@@ -196,7 +203,6 @@ const StoryFlowEditorContent = () => {
   const deleteSelectedNode = useCallback(() => {
     if (!selectedNode) return;
     
-    // 子ノードも削除する必要があるか確認
     const hasChildren = edges.some(edge => edge.source === selectedNode.id);
     
     if (hasChildren) {
@@ -204,7 +210,6 @@ const StoryFlowEditorContent = () => {
         return;
       }
       
-      // このノードとその子孫ノードをすべて取得
       const getAllDescendants = (nodeId: string, acc: string[] = []): string[] => {
         const childEdges = edges.filter(edge => edge.source === nodeId);
         const childNodes = childEdges.map(edge => edge.target);
@@ -219,7 +224,6 @@ const StoryFlowEditorContent = () => {
       
       const nodesToDelete = getAllDescendants(selectedNode.id);
       
-      // ノードとそれに関連するエッジを削除
       setNodes((nds) => nds.filter((node) => !nodesToDelete.includes(node.id)));
       setEdges((eds) => 
         eds.filter((edge) => 
@@ -227,7 +231,6 @@ const StoryFlowEditorContent = () => {
         )
       );
     } else {
-      // 子ノードがない場合は、単純に選択されたノードだけを削除
       setNodes((nds) => nds.filter((node) => node.id !== selectedNode.id));
       setEdges((eds) => 
         eds.filter((edge) => 
@@ -307,9 +310,13 @@ const StoryFlowEditorContent = () => {
     toast.success('初期データに戻しました');
   }, [setNodes, setEdges, reactFlowInstance]);
   
+  const toggleTimeline = useCallback(() => {
+    setShowTimeline(prev => !prev);
+  }, []);
+  
   return (
     <div className="w-full h-full flex flex-col">
-      <div className="flex-1" style={{ minHeight: "400px" }}>
+      <div className={`flex-1 ${showTimeline ? 'h-[calc(100%-180px)]' : 'h-[calc(100%-40px)]'}`} style={{ minHeight: "300px" }}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -351,6 +358,15 @@ const StoryFlowEditorContent = () => {
               <Button size="sm" variant="outline" onClick={loadSavedFlow}>
                 <Repeat className="h-4 w-4 mr-1" />
                 読込
+              </Button>
+              <Button 
+                size="sm" 
+                variant={showTimeline ? "default" : "outline"}
+                onClick={toggleTimeline}
+                className={showTimeline ? "bg-blue-500 hover:bg-blue-600 text-white" : ""}
+              >
+                <Clock className="h-4 w-4 mr-1" />
+                時系列
               </Button>
             </div>
             
@@ -474,12 +490,31 @@ const StoryFlowEditorContent = () => {
         </ReactFlow>
       </div>
       
-      <div className="h-40 mt-2 border-t border-gray-200">
-        <NodeDetailPanel
-          selectedNode={selectedNode}
-          onNodeUpdate={handleNodeUpdate}
-        />
-      </div>
+      {showTimeline ? (
+        <>
+          <div className="h-140 border-t border-gray-200">
+            <TimelineView 
+              nodes={nodes} 
+              onNodeClick={handleTimelineNodeClick}
+              selectedNodeId={selectedNode?.id || null}
+            />
+          </div>
+          
+          <div className="h-40 border-t border-gray-200">
+            <NodeDetailPanel
+              selectedNode={selectedNode}
+              onNodeUpdate={handleNodeUpdate}
+            />
+          </div>
+        </>
+      ) : (
+        <div className="h-40 mt-2 border-t border-gray-200">
+          <NodeDetailPanel
+            selectedNode={selectedNode}
+            onNodeUpdate={handleNodeUpdate}
+          />
+        </div>
+      )}
 
       <FlowAIAssistant
         isOpen={showAIAssistant}

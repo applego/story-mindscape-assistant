@@ -35,6 +35,8 @@ export interface SceneData extends StoryNodeBase {
   type: 'scene';
   parentId: string; // 親シークエンスのID
   content: string;
+  // 時系列情報の追加
+  timePosition?: number; // 時系列上の位置（0-100の値）
 }
 
 export interface ActionData extends StoryNodeBase {
@@ -43,6 +45,8 @@ export interface ActionData extends StoryNodeBase {
   actionType: 'action' | 'reaction' | 'dialogue' | 'thought';
   character: string; // 行動するキャラクター
   content: string;
+  // 時系列情報の追加
+  timePosition?: number; // 時系列上の位置（0-100の値）
 }
 
 export type StoryNodeData = 

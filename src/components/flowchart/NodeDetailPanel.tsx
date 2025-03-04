@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -6,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Node } from '@xyflow/react';
 import { Button } from '@/components/ui/button';
-import { StoryNodeData } from './storyStructureTypes';
+import { StoryNodeData, SceneData, ActionData } from './storyStructureTypes';
 import { 
   BookText, 
   Route, 
@@ -14,7 +13,8 @@ import {
   Film, 
   MessageCircle, 
   UserCircle,
-  PenTool
+  PenTool,
+  Clock
 } from 'lucide-react';
 import { 
   Select,
@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 
 interface NodeDetailPanelProps {
   selectedNode: Node<StoryNodeData> | null;
@@ -40,6 +41,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
   const [phase, setPhase] = useState<string>('ki');
   const [actionType, setActionType] = useState<string>('action');
   const [character, setCharacter] = useState<string>('');
+  const [timePosition, setTimePosition] = useState<number>(0);
 
   useEffect(() => {
     if (selectedNode) {
@@ -56,6 +58,14 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
       setTags(selectedNode.data.tags || []);
       setCharacters(selectedNode.data.characters || []);
       setPhase(selectedNode.data.phase || 'ki');
+      
+      // 時系列位置の設定
+      if ((selectedNode.data.type === 'scene' || selectedNode.data.type === 'action') && 
+          'timePosition' in selectedNode.data) {
+        setTimePosition(selectedNode.data.timePosition || 0);
+      } else {
+        setTimePosition(0);
+      }
       
       if (selectedNode.data.type === 'action' && 'actionType' in selectedNode.data) {
         setActionType(selectedNode.data.actionType || 'action');
@@ -84,21 +94,29 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
       onNodeUpdate(selectedNode.id, { content: e.target.value });
     }
   };
-  
+
+  const handleTimePositionChange = (value: number[]) => {
+    const position = value[0];
+    setTimePosition(position);
+    if (selectedNode && (selectedNode.data.type === 'scene' || selectedNode.data.type === 'action')) {
+      onNodeUpdate(selectedNode.id, { timePosition: position });
+    }
+  };
+
   const handlePhaseChange = (value: string) => {
     setPhase(value);
     if (selectedNode) {
       onNodeUpdate(selectedNode.id, { phase: value as any });
     }
   };
-  
+
   const handleActionTypeChange = (value: string) => {
     setActionType(value);
     if (selectedNode) {
       onNodeUpdate(selectedNode.id, { actionType: value as any });
     }
   };
-  
+
   const handleCharacterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCharacter(e.target.value);
     if (selectedNode) {
@@ -124,7 +142,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
       onNodeUpdate(selectedNode.id, { tags: newTags });
     }
   };
-  
+
   const handleAddCharacter = () => {
     if (characterInput.trim() && !characters.includes(characterInput.trim())) {
       const newCharacters = [...characters, characterInput.trim()];
@@ -224,6 +242,31 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
                 placeholder="内容を入力"
                 className="min-h-[120px] mt-1"
               />
+            </div>
+          )}
+          
+          {/* 時系列位置の設定 - シーンとアクションの場合のみ表示 */}
+          {(selectedNode.data.type === 'scene' || selectedNode.data.type === 'action') && (
+            <div>
+              <Label htmlFor="time-position" className="flex items-center">
+                <Clock className="h-4 w-4 mr-1" />
+                時系列上の位置
+              </Label>
+              <div className="mt-2 px-2">
+                <Slider
+                  id="time-position"
+                  value={[timePosition]}
+                  min={0}
+                  max={100}
+                  step={1}
+                  onValueChange={handleTimePositionChange}
+                />
+              </div>
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>開始</span>
+                <span>{timePosition}%</span>
+                <span>終了</span>
+              </div>
             </div>
           )}
           
