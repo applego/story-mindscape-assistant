@@ -1,9 +1,11 @@
 
 // ストーリー階層構造の型定義
+import { Node } from '@xyflow/react';
 
 export type StoryPhase = 'ki' | 'sho' | 'ten' | 'ketsu';
 export type NodeType = 'story' | 'storyline' | 'sequence' | 'scene' | 'action';
 
+// React Flow Nodeとの互換性のための拡張型
 export interface StoryNodeBase {
   id: string;
   title: string;
@@ -12,6 +14,7 @@ export interface StoryNodeBase {
   tags?: string[];
   characters?: string[];
   notes?: string;
+  [key: string]: unknown; // TypeScriptの Record<string, unknown> 互換のためのインデックスシグネチャ
 }
 
 export interface StoryData extends StoryNodeBase {
@@ -48,3 +51,6 @@ export type StoryNodeData =
   | SequenceData 
   | SceneData 
   | ActionData;
+
+// ReactFlowのNodeと統合したノードタイプ定義
+export type FlowStoryNode = Node<StoryNodeData>;

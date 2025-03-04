@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -44,12 +45,19 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
     if (selectedNode) {
       setTitle(selectedNode.data.title || '');
       setDescription(selectedNode.data.description || '');
-      setContent(selectedNode.data.content || '');
+      
+      // Check if content exists in the node data based on type
+      if ('content' in selectedNode.data) {
+        setContent(selectedNode.data.content || '');
+      } else {
+        setContent('');
+      }
+      
       setTags(selectedNode.data.tags || []);
       setCharacters(selectedNode.data.characters || []);
       setPhase(selectedNode.data.phase || 'ki');
       
-      if (selectedNode.data.type === 'action') {
+      if (selectedNode.data.type === 'action' && 'actionType' in selectedNode.data) {
         setActionType(selectedNode.data.actionType || 'action');
         setCharacter(selectedNode.data.character || '');
       }
@@ -206,7 +214,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
             />
           </div>
           
-          {(selectedNode.data.type === 'scene' || selectedNode.data.type === 'action') && (
+          {(selectedNode.data.type === 'scene' || selectedNode.data.type === 'action') && 'content' in selectedNode.data && (
             <div>
               <Label htmlFor="node-content">内容</Label>
               <Textarea 
@@ -219,7 +227,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
             </div>
           )}
           
-          {selectedNode.data.type === 'action' && (
+          {selectedNode.data.type === 'action' && 'actionType' in selectedNode.data && (
             <>
               <div>
                 <Label htmlFor="action-type">アクションタイプ</Label>

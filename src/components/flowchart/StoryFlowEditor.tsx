@@ -15,7 +15,8 @@ import {
   Node,
   NodeMouseHandler,
   ReactFlowProvider,
-  Viewport
+  Edge,
+  Connection
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { initialStoryNodes, initialStoryEdges } from './storyTreeData';
@@ -40,15 +41,15 @@ import {
   UserCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { StoryNodeData } from './storyStructureTypes';
+import { StoryNodeData, FlowStoryNode } from './storyStructureTypes';
 
 const nodeTypes = {
   storyNode: StoryNode,
 };
 
 const StoryFlowEditorContent = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState<StoryNodeData>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node<StoryNodeData>>(initialStoryNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialStoryEdges);
   const [selectedNode, setSelectedNode] = useState<Node<StoryNodeData> | null>(null);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
   const [showMenu, setShowMenu] = useState(false);
@@ -98,7 +99,7 @@ const StoryFlowEditorContent = () => {
     setSelectedNode(node as Node<StoryNodeData>);
   }, []);
   
-  const onConnect = useCallback((params) => {
+  const onConnect = useCallback((params: Connection) => {
     const newEdge = {
       ...params,
       type: 'smoothstep',
@@ -139,10 +140,11 @@ const StoryFlowEditorContent = () => {
       type: 'storyNode',
       position: menuPosition,
       data: { 
+        id: `${type}_${Date.now()}`,
         type: type,
         title: `新しい${getNodeTypeLabel(type)}`,
         description: '',
-        phase: 'ki' as any,
+        phase: 'ki',
         ...(parentId ? { parentId } : {}),
         ...(type === 'scene' ? { content: '' } : {}),
         ...(type === 'action' ? { 

@@ -1,12 +1,5 @@
-
 import { Node, Edge, MarkerType } from '@xyflow/react';
-import { 
-  StoryNodeData, 
-  StoryData,
-  StorylineData,
-  SequenceData,
-  SceneData
-} from './storyStructureTypes';
+import { StoryNodeData } from './storyStructureTypes';
 
 export const generateNodeId = () => `node_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -24,6 +17,7 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
     type: 'storyNode',
     position: { x: 400, y: 50 },
     data: { 
+      id: storyId,
       type: 'story',
       title: '物語のタイトル',
       description: 'あなたの物語の全体的なテーマと目的',
@@ -37,6 +31,7 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
     type: 'storyNode',
     position: { x: 200, y: 200 },
     data: { 
+      id: storylineId1,
       type: 'storyline',
       parentId: storyId,
       title: '主人公の冒険',
@@ -49,6 +44,7 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
     type: 'storyNode',
     position: { x: 600, y: 200 },
     data: { 
+      id: storylineId2,
       type: 'storyline',
       parentId: storyId,
       title: '仲間との絆',
@@ -63,6 +59,7 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
     type: 'storyNode',
     position: { x: 200, y: 350 },
     data: { 
+      id: sequenceId1,
       type: 'sequence',
       parentId: storylineId1,
       title: '異世界への旅立ち',
@@ -75,6 +72,7 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
     type: 'storyNode',
     position: { x: 600, y: 350 },
     data: { 
+      id: sequenceId2,
       type: 'sequence',
       parentId: storylineId2,
       title: '仲間との出会い',
@@ -89,6 +87,7 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
     type: 'storyNode',
     position: { x: 100, y: 500 },
     data: { 
+      id: 'scene-1',
       type: 'scene',
       parentId: sequenceId1,
       title: '異世界への召喚',
@@ -103,6 +102,7 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
     type: 'storyNode',
     position: { x: 300, y: 500 },
     data: { 
+      id: 'scene-2',
       type: 'scene',
       parentId: sequenceId1,
       title: '異世界での目覚め',
@@ -117,6 +117,7 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
     type: 'storyNode',
     position: { x: 500, y: 500 },
     data: { 
+      id: 'scene-3',
       type: 'scene',
       parentId: sequenceId2,
       title: '魔法使いとの出会い',
@@ -131,6 +132,7 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
     type: 'storyNode',
     position: { x: 700, y: 500 },
     data: { 
+      id: 'scene-4',
       type: 'scene',
       parentId: sequenceId2,
       title: '最初の共闘',
@@ -147,6 +149,7 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
     type: 'storyNode',
     position: { x: 100, y: 650 },
     data: { 
+      id: 'action-1',
       type: 'action',
       parentId: 'scene-1',
       title: '召喚の瞬間',
@@ -161,6 +164,7 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
     type: 'storyNode',
     position: { x: 300, y: 650 },
     data: { 
+      id: 'action-2',
       type: 'action',
       parentId: 'scene-2',
       title: '案内人との対話',

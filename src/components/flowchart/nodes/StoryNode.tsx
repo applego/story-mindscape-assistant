@@ -3,7 +3,7 @@ import { memo, useState } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { cn } from '@/lib/utils';
 import { MoreHorizontal, Edit2, UserCircle, BookText, Route, Layout, Film, MessageCircle } from 'lucide-react';
-import { StoryNodeData, NodeType } from '../storyStructureTypes';
+import { StoryNodeData } from '../storyStructureTypes';
 
 interface StoryNodeProps {
   id: string;
