@@ -97,6 +97,24 @@ const StoryFlowEditorContent = () => {
     return () => clearTimeout(timer);
   }, [reactFlowInstance, setNodes, setEdges]);
   
+  const getAllDescendantIds = useCallback((nodeId: string): string[] => {
+    const descendants: string[] = [];
+    const stack: string[] = [nodeId];
+    
+    while (stack.length > 0) {
+      const currentId = stack.pop()!;
+      const childEdges = edges.filter(edge => edge.source === currentId);
+      const childIds = childEdges.map(edge => edge.target);
+      
+      childIds.forEach(id => {
+        descendants.push(id);
+        stack.push(id);
+      });
+    }
+    
+    return descendants;
+  }, [edges]);
+  
   const handleNodesChange = useCallback((changes: NodeChange[]) => {
     onNodesChange(changes as NodeChange<Node<StoryNodeData>>[]);
     
@@ -105,52 +123,43 @@ const StoryFlowEditorContent = () => {
     ) as NodePositionChange[];
     
     if (positionChanges.length > 0) {
-      const parentPositions = new Map<string, { prevX: number, prevY: number }>();
+      const nodeDeltaPositions = new Map<string, { dx: number, dy: number }>();
       
       positionChanges.forEach(change => {
         const node = nodes.find(n => n.id === change.id);
         if (node && change.position) {
-          parentPositions.set(change.id, {
-            prevX: node.position.x,
-            prevY: node.position.y
+          const dx = change.position.x - node.position.x;
+          const dy = change.position.y - node.position.y;
+          nodeDeltaPositions.set(change.id, { dx, dy });
+          
+          const descendantIds = getAllDescendantIds(change.id);
+          
+          setNodes(nds => {
+            return nds.map(n => {
+              if (n.id === change.id) {
+                return {
+                  ...n,
+                  position: change.position
+                };
+              }
+              
+              if (descendantIds.includes(n.id)) {
+                return {
+                  ...n,
+                  position: {
+                    x: n.position.x + dx,
+                    y: n.position.y + dy
+                  }
+                };
+              }
+              
+              return n;
+            });
           });
         }
       });
-      
-      setNodes(nds => {
-        return nds.map(node => {
-          const parentChange = positionChanges.find(change => change.id === node.id);
-          if (parentChange && parentChange.position) {
-            return {
-              ...node,
-              position: parentChange.position
-            };
-          }
-          
-          if (node.data.parentId && parentPositions.has(node.data.parentId)) {
-            const parentNode = nds.find(n => n.id === node.data.parentId);
-            const parentPrev = parentPositions.get(node.data.parentId)!;
-            const parentCurrent = parentNode ? parentNode.position : undefined;
-            
-            if (parentCurrent) {
-              const dx = parentCurrent.x - parentPrev.prevX;
-              const dy = parentCurrent.y - parentPrev.prevY;
-              
-              return {
-                ...node,
-                position: {
-                  x: node.position.x + dx,
-                  y: node.position.y + dy
-                }
-              };
-            }
-          }
-          
-          return node;
-        });
-      });
     }
-  }, [nodes, onNodesChange, setNodes]);
+  }, [nodes, onNodesChange, setNodes, getAllDescendantIds]);
   
   const onNodeClick: NodeMouseHandler = useCallback((event, node) => {
     setSelectedNode(node as Node<StoryNodeData>);
@@ -286,45 +295,25 @@ const StoryFlowEditorContent = () => {
   const deleteSelectedNode = useCallback(() => {
     if (!selectedNode) return;
     
-    const hasChildren = edges.some(edge => edge.source === selectedNode.id);
+    const descendantIds = getAllDescendantIds(selectedNode.id);
+    const nodesToDelete = [selectedNode.id, ...descendantIds];
     
-    if (hasChildren) {
-      if (!confirm('このノードを削除すると、すべての子ノードも削除されます。よろしいですか？')) {
+    if (descendantIds.length > 0) {
+      if (!confirm(`このノードを削除すると、${descendantIds.length}個の子孫ノードも削除されます。よろしいですか？`)) {
         return;
       }
-      
-      const getAllDescendants = (nodeId: string, acc: string[] = []): string[] => {
-        const childEdges = edges.filter(edge => edge.source === nodeId);
-        const childNodes = childEdges.map(edge => edge.target);
-        
-        acc.push(nodeId);
-        childNodes.forEach(childId => {
-          getAllDescendants(childId, acc);
-        });
-        
-        return acc;
-      };
-      
-      const nodesToDelete = getAllDescendants(selectedNode.id);
-      
-      setNodes((nds) => nds.filter((node) => !nodesToDelete.includes(node.id)));
-      setEdges((eds) => 
-        eds.filter((edge) => 
-          !nodesToDelete.includes(edge.source) && !nodesToDelete.includes(edge.target)
-        )
-      );
-    } else {
-      setNodes((nds) => nds.filter((node) => node.id !== selectedNode.id));
-      setEdges((eds) => 
-        eds.filter((edge) => 
-          edge.source !== selectedNode.id && edge.target !== selectedNode.id
-        )
-      );
     }
+    
+    setNodes((nds) => nds.filter((node) => !nodesToDelete.includes(node.id)));
+    setEdges((eds) => 
+      eds.filter((edge) => 
+        !nodesToDelete.includes(edge.source) && !nodesToDelete.includes(edge.target)
+      )
+    );
     
     setSelectedNode(null);
     toast.success('ノードを削除しました');
-  }, [selectedNode, edges, setNodes, setEdges]);
+  }, [selectedNode, getAllDescendantIds, setNodes, setEdges]);
   
   const saveFlow = useCallback(() => {
     const flow = reactFlowInstance.toObject();
@@ -367,7 +356,7 @@ const StoryFlowEditorContent = () => {
       console.error('Flow loading error:', error);
       setNodes(initialStoryNodes);
       setEdges(initialStoryEdges);
-      toast.error('読み込み���ラーが発生しました。初期データを表示します。');
+      toast.error('読み込みエラーが発生しました。初期データを表示します。');
       
       setTimeout(() => {
         reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: false });
