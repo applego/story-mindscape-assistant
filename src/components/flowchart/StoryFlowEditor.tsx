@@ -193,11 +193,20 @@ const StoryFlowEditorContent = () => {
   };
   
   const handleNodeUpdate = useCallback((nodeId: string, newData: Partial<StoryNodeData>) => {
-    setNodes((nds) =>
-      nds.map((node) =>
-        node.id === nodeId ? { ...node, data: { ...node.data, ...newData } } : node
-      )
-    );
+    setNodes((nds) => {
+      return nds.map((node) => {
+        if (node.id === nodeId) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              ...newData
+            }
+          };
+        }
+        return node;
+      });
+    });
   }, [setNodes]);
   
   const deleteSelectedNode = useCallback(() => {

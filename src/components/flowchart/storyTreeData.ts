@@ -1,3 +1,4 @@
+
 import { Node, Edge, MarkerType } from '@xyflow/react';
 import { StoryNodeData } from './storyStructureTypes';
 
@@ -95,6 +96,7 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
       phase: 'ki',
       content: '',
       characters: ['主人公'],
+      timePosition: 0,
     },
   },
   {
@@ -110,6 +112,7 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
       phase: 'ki',
       content: '',
       characters: ['主人公', '案内人'],
+      timePosition: 20,
     },
   },
   {
@@ -125,6 +128,7 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
       phase: 'sho',
       content: '',
       characters: ['主人公', '魔法使い'],
+      timePosition: 40,
     },
   },
   {
@@ -140,6 +144,7 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
       phase: 'sho',
       content: '',
       characters: ['主人公', '魔法使い', 'モンスター'],
+      timePosition: 60,
     },
   },
   
@@ -157,6 +162,7 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
       actionType: 'action',
       character: '主人公',
       content: '太郎は静かな図書館で本を読んでいた。突然、ページから金色の光が漏れ出し、彼の体を包み込んだ。',
+      timePosition: 10,
     },
   },
   {
@@ -172,6 +178,7 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
       actionType: 'dialogue',
       character: '案内人',
       content: '「ようこそ、勇者様。あなたは預言通り、我々の世界を救うためにやってきたのです」',
+      timePosition: 30,
     },
   },
 ];

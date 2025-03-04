@@ -62,7 +62,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({ nodes, onNodeClick, selecte
   const getNodeIcon = (node: Node<StoryNodeData>) => {
     if (node.data.type === 'scene') {
       return <Clock className="h-3 w-3 mr-1" />;
-    } else if (node.data.type === 'action' && node.data.actionType === 'dialogue') {
+    } else if (node.data.type === 'action' && 'actionType' in node.data && node.data.actionType === 'dialogue') {
       return <ArrowRight className="h-3 w-3 mr-1" />;
     }
     return <ArrowRight className="h-3 w-3 mr-1" />;
@@ -110,7 +110,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({ nodes, onNodeClick, selecte
                     </p>
                   )}
                   
-                  {node.data.characters && node.data.characters.length > 0 && (
+                  {'characters' in node.data && node.data.characters && node.data.characters.length > 0 && (
                     <div className="mt-1 text-[10px] text-gray-500">
                       登場: {node.data.characters.join(', ')}
                     </div>

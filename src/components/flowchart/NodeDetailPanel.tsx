@@ -57,12 +57,17 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
       
       setTags(selectedNode.data.tags || []);
       setCharacters(selectedNode.data.characters || []);
-      setPhase(selectedNode.data.phase || 'ki');
+      
+      if ('phase' in selectedNode.data && selectedNode.data.phase) {
+        setPhase(selectedNode.data.phase);
+      } else {
+        setPhase('ki');
+      }
       
       // 時系列位置の設定
       if ((selectedNode.data.type === 'scene' || selectedNode.data.type === 'action') && 
           'timePosition' in selectedNode.data) {
-        setTimePosition(selectedNode.data.timePosition || 0);
+        setTimePosition(selectedNode.data.timePosition !== undefined ? selectedNode.data.timePosition : 0);
       } else {
         setTimePosition(0);
       }
@@ -91,7 +96,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value);
     if (selectedNode) {
-      onNodeUpdate(selectedNode.id, { content: e.target.value });
+      onNodeUpdate(selectedNode.id, { content: e.target.value as any });
     }
   };
 
