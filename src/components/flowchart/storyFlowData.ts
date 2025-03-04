@@ -1,6 +1,6 @@
 
 import { Node, Edge, MarkerType } from '@xyflow/react';
-import { StoryNodeData } from './nodes/StoryNode';
+import { StoryNodeData } from './storyStructureTypes';
 
 export const generateNodeId = () => `node_${Math.random().toString(36).substr(2, 9)}`;
 

@@ -32,7 +32,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
       setDescription(selectedNode.data.description || '');
       
       if ('content' in selectedNode.data && selectedNode.data.content) {
-        setContent(selectedNode.data.content);
+        setContent(String(selectedNode.data.content));
       } else {
         setContent('');
       }
