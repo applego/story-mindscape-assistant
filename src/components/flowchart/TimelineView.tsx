@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Node } from '@xyflow/react';
 import { StoryNodeData } from './storyStructureTypes';
@@ -150,7 +149,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({ nodes, onNodeClick, selecte
     };
     
     setTreeData(buildTree());
-  }, [nodes]);
+  }, [nodes]); // nodes依存配列で更新を即時反映
 
   const toggleNode = (nodeId: string) => {
     const updateNodeOpenState = (items: TreeNode[]): TreeNode[] => {

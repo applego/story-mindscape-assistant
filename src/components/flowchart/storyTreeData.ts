@@ -20,7 +20,7 @@ export const initialStoryNodes: Node<StoryNodeData>[] = [
     data: { 
       id: storyId,
       type: 'story',
-      title: 'ストーリーライン構成',
+      title: 'ストーリー',
       description: 'あなたの物語の全体的なテーマと目的',
       tags: ['ファンタジー', '冒険'],
       timePosition: 0,

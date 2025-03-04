@@ -15,10 +15,12 @@ export interface StoryNodeBase {
   characters?: string[];
   notes?: string;
   timePosition?: number; // 時系列上の位置（0-100の値）
+  [key: string]: unknown; // インデックスシグネチャを追加
 }
 
 export interface StoryData extends StoryNodeBase {
   type: 'story';
+  parentId?: string; // インタフェースごとにparentIdを追加
 }
 
 export interface StorylineData extends StoryNodeBase {

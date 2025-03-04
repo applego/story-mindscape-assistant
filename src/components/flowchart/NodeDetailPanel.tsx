@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Node } from '@xyflow/react';
 import { StoryNodeData, StoryPhase } from './storyStructureTypes';
@@ -47,7 +46,6 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
         setPhase('ki');
       }
       
-      // 時系列位置の設定
       if ((selectedNode.data.type === 'scene' || selectedNode.data.type === 'action') && 
           'timePosition' in selectedNode.data) {
         setTimePosition(selectedNode.data.timePosition !== undefined ? selectedNode.data.timePosition : 0);
@@ -82,7 +80,6 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value);
     if (selectedNode) {
-      // 型アサーションを使用して、contentプロパティをStoryNodeDataの部分として扱う
       onNodeUpdate(selectedNode.id, { content: e.target.value } as any);
     }
   };
@@ -128,7 +125,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
     const type = selectedNode.data.type;
     
     switch (type) {
-      case 'story': return 'ストーリーライン構成';
+      case 'story': return 'ストーリー';
       case 'storyline': return 'ストーリーライン';
       case 'sequence': return 'シークエンス';
       case 'scene': return 'シーン';

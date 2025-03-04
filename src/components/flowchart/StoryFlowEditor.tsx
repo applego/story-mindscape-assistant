@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { 
   ReactFlow, 
@@ -17,7 +16,8 @@ import {
   ReactFlowProvider,
   Edge,
   Connection,
-  NodeChange
+  NodeChange,
+  NodePositionChange
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { initialStoryNodes, initialStoryEdges } from './storyTreeData';
@@ -97,41 +97,60 @@ const StoryFlowEditorContent = () => {
     return () => clearTimeout(timer);
   }, [reactFlowInstance, setNodes, setEdges]);
   
-  // ノードのドラッグ時の処理を拡張
   const handleNodesChange = useCallback((changes: NodeChange[]) => {
-    // 標準の変更を適用
-    onNodesChange(changes);
+    onNodesChange(changes as NodeChange<Node<StoryNodeData>>[]);
     
-    // 位置の変更を見つける
     const positionChanges = changes.filter(
       change => change.type === 'position' && change.dragging
-    );
+    ) as NodePositionChange[];
     
     if (positionChanges.length > 0) {
+      const parentPositions = new Map<string, { prevX: number, prevY: number }>();
+      
       positionChanges.forEach(change => {
-        if (change.type === 'position' && change.dragging) {
-          const parentId = change.id;
-          const dx = change.position?.x || 0;
-          const dy = change.position?.y || 0;
-          
-          // 親ノードの子ノードを探して一緒に動かす
-          setNodes(nds => {
-            return nds.map(node => {
-              // 子ノードの場合、親ノードと一緒に移動
-              if (node.data.parentId === parentId) {
-                // 元の位置からの差分を計算
-                node.position = {
-                  x: node.position.x + dx,
-                  y: node.position.y + dy
-                };
-              }
-              return node;
-            });
+        const node = nodes.find(n => n.id === change.id);
+        if (node && change.position) {
+          parentPositions.set(change.id, {
+            prevX: node.position.x,
+            prevY: node.position.y
           });
         }
       });
+      
+      setNodes(nds => {
+        return nds.map(node => {
+          const parentChange = positionChanges.find(change => change.id === node.id);
+          if (parentChange && parentChange.position) {
+            return {
+              ...node,
+              position: parentChange.position
+            };
+          }
+          
+          if (node.data.parentId && parentPositions.has(node.data.parentId)) {
+            const parentNode = nds.find(n => n.id === node.data.parentId);
+            const parentPrev = parentPositions.get(node.data.parentId)!;
+            const parentCurrent = parentNode ? parentNode.position : undefined;
+            
+            if (parentCurrent) {
+              const dx = parentCurrent.x - parentPrev.prevX;
+              const dy = parentCurrent.y - parentPrev.prevY;
+              
+              return {
+                ...node,
+                position: {
+                  x: node.position.x + dx,
+                  y: node.position.y + dy
+                }
+              };
+            }
+          }
+          
+          return node;
+        });
+      });
     }
-  }, [onNodesChange, setNodes]);
+  }, [nodes, onNodesChange, setNodes]);
   
   const onNodeClick: NodeMouseHandler = useCallback((event, node) => {
     setSelectedNode(node as Node<StoryNodeData>);
@@ -155,9 +174,31 @@ const StoryFlowEditorContent = () => {
         type: MarkerType.ArrowClosed,
       },
     };
+    
     setEdges((eds) => addEdge(newEdge, eds));
+    
+    const sourceNode = nodes.find(n => n.id === params.source);
+    const targetNode = nodes.find(n => n.id === params.target);
+    
+    if (sourceNode && targetNode) {
+      setNodes(nds => 
+        nds.map(node => {
+          if (node.id === targetNode.id) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                parentId: sourceNode.id
+              }
+            };
+          }
+          return node;
+        })
+      );
+    }
+    
     toast.success('ノード間の接続を作成しました');
-  }, [setEdges]);
+  }, [nodes, setEdges, setNodes]);
   
   const onPaneClick = useCallback((event) => {
     if (showMenu) {
@@ -216,7 +257,7 @@ const StoryFlowEditorContent = () => {
   
   const getNodeTypeLabel = useCallback((type: string) => {
     switch (type) {
-      case 'story': return 'ストーリーライン構成';
+      case 'story': return 'ストーリー';
       case 'storyline': return 'ストーリーライン';
       case 'sequence': return 'シークエンス';
       case 'scene': return 'シーン';
@@ -391,7 +432,7 @@ const StoryFlowEditorContent = () => {
             <div className="flex gap-2 p-3 bg-white rounded-lg shadow-md mb-2">
               <Button size="sm" variant="outline" onClick={() => addNewNode('story')}>
                 <BookText className="h-4 w-4 mr-1" />
-                ストーリーライン構成
+                ストーリー
               </Button>
               <Button size="sm" variant="outline" onClick={saveFlow}>
                 <Save className="h-4 w-4 mr-1" />
@@ -471,7 +512,7 @@ const StoryFlowEditorContent = () => {
               <div className="flex flex-col gap-2">
                 <Button size="sm" onClick={() => addNewNode('story')} className="justify-start">
                   <BookText size={14} className="mr-2" />
-                  ストーリーライン構成
+                  ストーリー
                 </Button>
                 <Button size="sm" onClick={() => addNewNode('storyline')} className="justify-start">
                   <Route size={14} className="mr-2" />

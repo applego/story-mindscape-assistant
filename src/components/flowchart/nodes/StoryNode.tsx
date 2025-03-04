@@ -1,3 +1,4 @@
+
 import { memo, useState } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { cn } from '@/lib/utils';
@@ -69,7 +70,7 @@ const StoryNode = ({ id, data, isConnectable, selected }: StoryNodeProps) => {
     const nodeType = data.type;
     
     switch (nodeType) {
-      case 'story': return 'ストーリーライン構成';
+      case 'story': return 'ストーリー';
       case 'storyline': return 'ストーリーライン';
       case 'sequence': return 'シークエンス';
       case 'scene': return 'シーン';
