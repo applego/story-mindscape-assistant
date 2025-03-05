@@ -1,30 +1,39 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import WelcomeModal from "./components/WelcomeModal";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Toaster } from './components/ui/sonner';
+import Index from './pages/Index';
+import NotFound from './pages/NotFound';
+import WelcomeModal from './components/WelcomeModal';
+import { ThemeProvider } from './components/ThemeProvider';
 
-const queryClient = new QueryClient();
+function App() {
+  const [showWelcome, setShowWelcome] = useState(true);
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
+  useEffect(() => {
+    const hasVisited = localStorage.getItem('hasVisitedBefore');
+    if (hasVisited) {
+      setShowWelcome(false);
+    }
+  }, []);
+
+  const handleCloseWelcome = () => {
+    localStorage.setItem('hasVisitedBefore', 'true');
+    setShowWelcome(false);
+  };
+
+  return (
+    <ThemeProvider defaultTheme="light">
+      <Router>
         <Routes>
           <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </BrowserRouter>
-      <WelcomeModal />
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+        {showWelcome && <WelcomeModal onClose={handleCloseWelcome} />}
+        <Toaster />
+      </Router>
+    </ThemeProvider>
+  );
+}
 
 export default App;

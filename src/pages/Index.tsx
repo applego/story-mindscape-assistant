@@ -6,7 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { HelpCircle, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useTheme } from "next-themes";
+import { ThemeProviderContext } from "@/components/ThemeProvider";
+import { useContext } from "react";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +18,7 @@ import {
 } from "@/components/ui/dialog";
 
 const Index = () => {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme } = useContext(ThemeProviderContext);
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
