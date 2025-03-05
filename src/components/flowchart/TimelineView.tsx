@@ -275,11 +275,62 @@ const TimelineView: React.FC<TimelineViewProps> = ({
       return node;
     });
     
+    // ドラッグ＆ドロップされたノードの子孫ノードも同様に移動させる
+    // 親ノードの子孫を再帰的に処理する関数
+    const getAllDescendantIds = (nodeId: string): string[] => {
+      const descendantIds: string[] = [];
+      
+      // 直接の子ノードを見つける
+      const childNodes = nodes.filter(n => n.data.parentId === nodeId);
+      
+      childNodes.forEach(childNode => {
+        descendantIds.push(childNode.id);
+        // 再帰的に子孫を追加
+        const grandChildIds = getAllDescendantIds(childNode.id);
+        descendantIds.push(...grandChildIds);
+      });
+      
+      return descendantIds;
+    };
+    
+    // ドラッグされたノードの子孫と対象ノードの子孫を特定
+    const draggedDescendants = getAllDescendantIds(draggedNodeId);
+    const targetDescendants = getAllDescendantIds(targetNodeId);
+    
+    // 子孫ノードのtimePositionも調整
+    const finalUpdatedNodes = updatedNodes.map(node => {
+      if (draggedDescendants.includes(node.id)) {
+        // ドラッグされたノードの子孫は、対象ノードのtimePositionに合わせて調整
+        const timeOffset = targetNode.data.timePosition - draggedNode.data.timePosition;
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            timePosition: (typeof node.data.timePosition === 'number' ? node.data.timePosition + timeOffset : 0)
+          }
+        };
+      }
+      
+      if (targetDescendants.includes(node.id)) {
+        // 対象ノードの子孫は、ドラッグされたノードのtimePositionに合わせて調整
+        const timeOffset = draggedNode.data.timePosition - targetNode.data.timePosition;
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            timePosition: (typeof node.data.timePosition === 'number' ? node.data.timePosition + timeOffset : 0)
+          }
+        };
+      }
+      
+      return node;
+    });
+    
     // ノードの更新をStoryFlowEditorに通知
-    onNodesUpdate(updatedNodes);
+    onNodesUpdate(finalUpdatedNodes);
     setDraggedNodeId(null);
     
-    toast.success("ノードの順序を入れ替えました");
+    toast.success("ノードとその子孫の順序を入れ替えました");
   };
 
   // ドラッグ終了時の処理
@@ -299,6 +350,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({
     toast.info(`表示モード: ${viewMode === 'time' ? '執筆順' : '時系列順'}`);
   };
 
+  // ツリーノードの再帰的レンダリング
   const renderTreeNode = (item: TreeNode, level: number = 0) => {
     const hasChildren = item.children.length > 0;
     
