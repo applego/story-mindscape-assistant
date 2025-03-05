@@ -1,3 +1,4 @@
+
 import { Edge, Node, MarkerType } from '@xyflow/react';
 import { StoryNodeData } from './storyStructureTypes';
 
@@ -6,6 +7,7 @@ export const sampleStoryNodes: Node<StoryNodeData>[] = [
   {
     id: 'story-1',
     data: { 
+      id: 'story-1',  // Added the required id property
       type: 'story', 
       title: 'サンプルストーリー',
       description: 'これはサンプルストーリーです。',
@@ -16,6 +18,7 @@ export const sampleStoryNodes: Node<StoryNodeData>[] = [
   {
     id: 'storyline-1',
     data: { 
+      id: 'storyline-1',  // Added the required id property
       type: 'storyline', 
       title: '第一章：出会い',
       description: '主人公が出会うシーン。',
@@ -29,6 +32,7 @@ export const sampleStoryNodes: Node<StoryNodeData>[] = [
   {
     id: 'sequence-1',
     data: { 
+      id: 'sequence-1',  // Added the required id property
       type: 'sequence', 
       title: '街中での出会い',
       description: '街中で偶然出会うシーンのシークエンス。',
@@ -42,6 +46,7 @@ export const sampleStoryNodes: Node<StoryNodeData>[] = [
   {
     id: 'scene-1',
     data: { 
+      id: 'scene-1',  // Added the required id property
       type: 'scene', 
       title: 'カフェでの出会い',
       description: 'カフェで初めて言葉を交わすシーン。',
@@ -57,6 +62,7 @@ export const sampleStoryNodes: Node<StoryNodeData>[] = [
   {
     id: 'action-1',
     data: { 
+      id: 'action-1',  // Added the required id property
       type: 'action', 
       title: '自己紹介',
       description: 'お互いに自己紹介をする。',
