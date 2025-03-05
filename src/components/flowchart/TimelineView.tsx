@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Node } from '@xyflow/react';
 import { StoryNodeData } from './storyStructureTypes';
@@ -201,58 +200,52 @@ const TimelineView: React.FC<TimelineViewProps> = ({
 
   const getNodeColor = (node: Node<StoryNodeData>) => {
     if (node.data.type === 'scene') {
-      if (node.data.phase === 'ki') return 'bg-blue-50 border-blue-400 text-blue-800';
-      if (node.data.phase === 'sho') return 'bg-green-50 border-green-400 text-green-800';
-      if (node.data.phase === 'ten') return 'bg-orange-50 border-orange-400 text-orange-800';
-      if (node.data.phase === 'ketsu') return 'bg-purple-50 border-purple-400 text-purple-800';
-      return 'bg-cyan-50 border-cyan-400 text-cyan-800';
+      if (node.data.phase === 'ki') return 'bg-blue-50 border-blue-400 text-blue-800 dark:bg-blue-900/30 dark:border-blue-700 dark:text-blue-300';
+      if (node.data.phase === 'sho') return 'bg-green-50 border-green-400 text-green-800 dark:bg-green-900/30 dark:border-green-700 dark:text-green-300';
+      if (node.data.phase === 'ten') return 'bg-orange-50 border-orange-400 text-orange-800 dark:bg-orange-900/30 dark:border-orange-700 dark:text-orange-300';
+      if (node.data.phase === 'ketsu') return 'bg-purple-50 border-purple-400 text-purple-800 dark:bg-purple-900/30 dark:border-purple-700 dark:text-purple-300';
+      return 'bg-cyan-50 border-cyan-400 text-cyan-800 dark:bg-cyan-900/30 dark:border-cyan-700 dark:text-cyan-300';
     } else if (node.data.type === 'action') {
       if ('actionType' in node.data) {
-        if (node.data.actionType === 'dialogue') return 'bg-yellow-50 border-yellow-400 text-yellow-800';
-        if (node.data.actionType === 'reaction') return 'bg-pink-50 border-pink-400 text-pink-800';
-        if (node.data.actionType === 'thought') return 'bg-indigo-50 border-indigo-400 text-indigo-800';
+        if (node.data.actionType === 'dialogue') return 'bg-yellow-50 border-yellow-400 text-yellow-800 dark:bg-yellow-900/30 dark:border-yellow-700 dark:text-yellow-300';
+        if (node.data.actionType === 'reaction') return 'bg-pink-50 border-pink-400 text-pink-800 dark:bg-pink-900/30 dark:border-pink-700 dark:text-pink-300';
+        if (node.data.actionType === 'thought') return 'bg-indigo-50 border-indigo-400 text-indigo-800 dark:bg-indigo-900/30 dark:border-indigo-700 dark:text-indigo-300';
       }
-      return 'bg-yellow-50 border-yellow-400 text-yellow-800';
+      return 'bg-yellow-50 border-yellow-400 text-yellow-800 dark:bg-yellow-900/30 dark:border-yellow-700 dark:text-yellow-300';
     } else if (node.data.type === 'story') {
-      return 'bg-indigo-50 border-indigo-400 text-indigo-800';
+      return 'bg-indigo-50 border-indigo-400 text-indigo-800 dark:bg-indigo-900/30 dark:border-indigo-700 dark:text-indigo-300';
     } else if (node.data.type === 'storyline') {
-      return 'bg-blue-50 border-blue-400 text-blue-800';
+      return 'bg-blue-50 border-blue-400 text-blue-800 dark:bg-blue-900/30 dark:border-blue-700 dark:text-blue-300';
     } else if (node.data.type === 'sequence') {
-      return 'bg-green-50 border-green-400 text-green-800';
+      return 'bg-green-50 border-green-400 text-green-800 dark:bg-green-900/30 dark:border-green-700 dark:text-green-300';
     }
-    return 'bg-gray-50 border-gray-400 text-gray-800';
+    return 'bg-gray-50 border-gray-400 text-gray-800 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300';
   };
 
-  // ドラッグ開始時の処理
   const handleDragStart = (nodeId: string) => {
     if (!reorderMode) return;
     setDraggedNodeId(nodeId);
   };
 
-  // ドラッグ中にドロップ対象の上にカーソルが来たときの処理
   const handleDragOver = (e: React.DragEvent, nodeId: string) => {
     if (!reorderMode || !draggedNodeId || draggedNodeId === nodeId) return;
     e.preventDefault();
   };
 
-  // ドロップ時の処理
   const handleDrop = (e: React.DragEvent, targetNodeId: string) => {
     if (!reorderMode || !draggedNodeId || draggedNodeId === targetNodeId) return;
     e.preventDefault();
     
-    // ドラッグ中のノードと対象ノードを見つける
     const draggedNode = nodes.find(n => n.id === draggedNodeId);
     const targetNode = nodes.find(n => n.id === targetNodeId);
     
     if (!draggedNode || !targetNode) return;
     
-    // 同じ階層のノードでない場合は処理しない
     if (draggedNode.data.type !== targetNode.data.type || draggedNode.data.parentId !== targetNode.data.parentId) {
       toast.error("同じ階層のノード間でのみ並び替えが可能です");
       return;
     }
     
-    // タイムポジションを入れ替える
     const updatedNodes = nodes.map(node => {
       if (node.id === draggedNodeId) {
         return {
@@ -275,17 +268,13 @@ const TimelineView: React.FC<TimelineViewProps> = ({
       return node;
     });
     
-    // ドラッグ＆ドロップされたノードの子孫ノードも同様に移動させる
-    // 親ノードの子孫を再帰的に処理する関数
     const getAllDescendantIds = (nodeId: string): string[] => {
       const descendantIds: string[] = [];
       
-      // 直接の子ノードを見つける
       const childNodes = nodes.filter(n => n.data.parentId === nodeId);
       
       childNodes.forEach(childNode => {
         descendantIds.push(childNode.id);
-        // 再帰的に子孫を追加
         const grandChildIds = getAllDescendantIds(childNode.id);
         descendantIds.push(...grandChildIds);
       });
@@ -293,14 +282,11 @@ const TimelineView: React.FC<TimelineViewProps> = ({
       return descendantIds;
     };
     
-    // ドラッグされたノードの子孫と対象ノードの子孫を特定
     const draggedDescendants = getAllDescendantIds(draggedNodeId);
     const targetDescendants = getAllDescendantIds(targetNodeId);
     
-    // 子孫ノードのtimePositionも調整
     const finalUpdatedNodes = updatedNodes.map(node => {
       if (draggedDescendants.includes(node.id)) {
-        // ドラッグされたノードの子孫は、対象ノードのtimePositionに合わせて調整
         const timeOffset = targetNode.data.timePosition - draggedNode.data.timePosition;
         return {
           ...node,
@@ -312,7 +298,6 @@ const TimelineView: React.FC<TimelineViewProps> = ({
       }
       
       if (targetDescendants.includes(node.id)) {
-        // 対象ノードの子孫は、ドラッグされたノードのtimePositionに合わせて調整
         const timeOffset = draggedNode.data.timePosition - targetNode.data.timePosition;
         return {
           ...node,
@@ -326,14 +311,12 @@ const TimelineView: React.FC<TimelineViewProps> = ({
       return node;
     });
     
-    // ノードの更新をStoryFlowEditorに通知
     onNodesUpdate(finalUpdatedNodes);
     setDraggedNodeId(null);
     
     toast.success("ノードとその子孫の順序を入れ替えました");
   };
 
-  // ドラッグ終了時の処理
   const handleDragEnd = () => {
     setDraggedNodeId(null);
   };
@@ -350,7 +333,6 @@ const TimelineView: React.FC<TimelineViewProps> = ({
     toast.info(`表示モード: ${viewMode === 'time' ? '執筆順' : '時系列順'}`);
   };
 
-  // ツリーノードの再帰的レンダリング
   const renderTreeNode = (item: TreeNode, level: number = 0) => {
     const hasChildren = item.children.length > 0;
     
@@ -368,9 +350,9 @@ const TimelineView: React.FC<TimelineViewProps> = ({
           className={`
             flex items-center rounded-md pr-2 py-1 
             ${getNodeColor(item.node)}
-            ${selectedNodeId === item.id ? 'ring-2 ring-blue-500' : ''}
+            ${selectedNodeId === item.id ? 'ring-2 ring-blue-500 dark:ring-blue-400' : ''}
             ${draggedNodeId === item.id ? 'opacity-50' : ''}
-            ${reorderMode ? 'cursor-grab' : 'hover:bg-opacity-80 cursor-pointer'}
+            ${reorderMode ? 'cursor-grab' : 'hover:bg-opacity-80 dark:hover:bg-opacity-50 cursor-pointer'}
           `}
           style={{ paddingLeft: `${level * 8 + 4}px` }}
         >
@@ -380,7 +362,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({
                 e.stopPropagation();
                 toggleNode(item.id);
               }}
-              className="mr-1 p-0.5 rounded hover:bg-white/30"
+              className="mr-1 p-0.5 rounded hover:bg-white/30 dark:hover:bg-black/30"
             >
               {item.isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
             </button>
@@ -401,7 +383,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({
         </div>
         
         {item.isOpen && hasChildren && (
-          <div className="ml-4 pl-2 border-l border-gray-200">
+          <div className="ml-4 pl-2 border-l border-gray-200 dark:border-gray-700">
             {item.children.map(child => renderTreeNode(child, level + 1))}
           </div>
         )}
@@ -410,7 +392,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({
   };
 
   return (
-    <div className="h-full border-t border-gray-200 pt-2">
+    <div className="h-full border-t border-gray-200 dark:border-gray-700 pt-2">
       <div className="flex items-center justify-between px-4 py-2">
         <h3 className="text-sm font-medium flex items-center">
           <Clock className="h-4 w-4 mr-1" />
@@ -446,7 +428,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({
               {treeData.map(item => renderTreeNode(item))}
             </div>
           ) : (
-            <div className="py-3 text-gray-500 text-xs italic">
+            <div className="py-3 text-gray-500 dark:text-gray-400 text-xs italic">
               ノードが追加されていません
             </div>
           )}

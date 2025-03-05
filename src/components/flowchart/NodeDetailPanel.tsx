@@ -153,7 +153,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
   
   if (!selectedNode) {
     return (
-      <div className="h-full flex items-center justify-center text-gray-500 text-sm">
+      <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400 text-sm">
         <p>ノードを選択してください</p>
       </div>
     );
@@ -168,8 +168,8 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
         <h3 className="text-lg font-medium">{getNodeTypeLabel()} の詳細</h3>
         {hasContent && (
           <div className="ml-auto flex items-center gap-1">
-            <FileText className="h-4 w-4 text-green-600" />
-            <span className="text-xs text-green-600">執筆済み</span>
+            <FileText className="h-4 w-4 text-green-600 dark:text-green-500" />
+            <span className="text-xs text-green-600 dark:text-green-500">執筆済み</span>
           </div>
         )}
       </div>
@@ -236,7 +236,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
                 </Label>
                 <div className="ml-auto flex items-center">
                   <Info className="h-4 w-4 mr-1 text-gray-400" />
-                  <span className="text-xs text-gray-500">時系列の順序を表します（並び替えには「タイムライン」のドラッグを使用）</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">時系列の順序を表します（並び替えには「タイムライン」のドラッグを使用）</span>
                 </div>
               </div>
               <div className="mt-2 px-1">
@@ -248,7 +248,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
                   step={1}
                   onValueChange={handleTimePositionChange}
                 />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                   <span>早い</span>
                   <span>{timePosition}%</span>
                   <span>遅い</span>
@@ -266,7 +266,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
                 文章内容
               </Label>
               {hasContent && (
-                <span className="text-xs text-green-600 flex items-center">
+                <span className="text-xs text-green-600 dark:text-green-500 flex items-center">
                   <Sparkles className="h-3 w-3 mr-1" />
                   執筆済み
                 </span>

@@ -4,8 +4,9 @@ import StoryFlowEditor from "@/components/flowchart/StoryFlowEditor";
 import CharacterPanel from "@/components/character/CharacterPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { HelpCircle } from "lucide-react";
+import { HelpCircle, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "next-themes";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +17,12 @@ import {
 } from "@/components/ui/dialog";
 
 const Index = () => {
+  const { theme, setTheme } = useTheme();
+
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
+
   return (
     <MainLayout>
       <div className="h-full flex flex-col">
@@ -28,42 +35,55 @@ const Index = () => {
                 <TabsTrigger value="themes">テーマ設計</TabsTrigger>
               </TabsList>
               
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <HelpCircle className="h-4 w-4 mr-1" />
-                    時系列と執筆順について
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>時系列と執筆順の使い分け</DialogTitle>
-                    <DialogDescription>
-                      物語では、出来事の実際の時間順序（時系列）と、それを読者に提示する順序（執筆順）が異なる場合があります。
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-medium">時系列順 (Chronological Order)</h3>
-                      <p className="text-sm text-muted-foreground">
-                        物語の出来事が実際に起こる順序です。フラッシュバックやフラッシュフォワードを含む物語全体の時間的な構造を把握するのに役立ちます。
-                      </p>
+              <div className="flex gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={toggleTheme}
+                  className="h-8 w-8"
+                >
+                  <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                  <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                  <span className="sr-only">Toggle theme</span>
+                </Button>
+                
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" size="sm">
+                      <HelpCircle className="h-4 w-4 mr-1" />
+                      時系列と執筆順について
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>時系列と執筆順の使い分け</DialogTitle>
+                      <DialogDescription>
+                        物語では、出来事の実際の時間順序（時系列）と、それを読者に提示する順序（執筆順）が異なる場合があります。
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <h3 className="text-sm font-medium">時系列順 (Chronological Order)</h3>
+                        <p className="text-sm text-muted-foreground">
+                          物語の出来事が実際に起こる順序です。フラッシュバックやフラッシュフォワードを含む物語全体の時間的な構造を把握するのに役立ちます。
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <h3 className="text-sm font-medium">執筆順 (Narrative Order)</h3>
+                        <p className="text-sm text-muted-foreground">
+                          出来事が読者に提示される順序です。フラッシュバック、パラレルストーリー、時間ジャンプなどの技法を使う場合に、実際の執筆/読書順序を管理します。
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <h3 className="text-sm font-medium">使い方</h3>
+                        <p className="text-sm text-muted-foreground">
+                          ツリービューの「時系列順」と「執筆順」ボタンを切り替えることで、異なる視点でストーリーを構成できます。「並替」ボタンでノードをドラッグ＆ドロップして順序を変更できます。
+                        </p>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-medium">執筆順 (Narrative Order)</h3>
-                      <p className="text-sm text-muted-foreground">
-                        出来事が読者に提示される順序です。フラッシュバック、パラレルストーリー、時間ジャンプなどの技法を使う場合に、実際の執筆/読書順序を管理します。
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-medium">使い方</h3>
-                      <p className="text-sm text-muted-foreground">
-                        ツリービューの「時系列順」と「執筆順」ボタンを切り替えることで、異なる視点でストーリーを構成できます。「並替」ボタンでノードをドラッグ＆ドロップして順序を変更できます。
-                      </p>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </div>
             
             <Separator className="my-2" />
@@ -79,8 +99,8 @@ const Index = () => {
             </TabsContent>
             
             <TabsContent value="themes" className="h-[calc(100vh-140px)]">
-              <div className="flex items-center justify-center h-full bg-gray-50 rounded-lg border border-dashed">
-                <p className="text-gray-500">テーマ設計ツールは開発中です。次のアップデートをお待ちください。</p>
+              <div className="flex items-center justify-center h-full bg-gray-50 dark:bg-gray-800 rounded-lg border border-dashed">
+                <p className="text-gray-500 dark:text-gray-400">テーマ設計ツールは開発中です。次のアップデートをお待ちください。</p>
               </div>
             </TabsContent>
           </Tabs>

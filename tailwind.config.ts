@@ -72,6 +72,15 @@ export default {
 					"border": "#E5E7EB",
 					"light-hover": "#F3F4F6",
 					"dark-text": "#1F2937",
+					// Dark mode variants
+					"dark-ki": "#2563EB",
+					"dark-sho": "#D97706",
+					"dark-ten": "#DC2626",
+					"dark-ketsu": "#059669",
+					"dark-gray": "#1F2937",
+					"dark-border": "#374151",
+					"dark-hover": "#111827",
+					"dark-text": "#F9FAFB",
 				}
 			},
 			borderRadius: {
