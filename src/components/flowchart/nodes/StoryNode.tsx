@@ -1,8 +1,7 @@
-
 import { memo, useState } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { cn } from '@/lib/utils';
-import { MoreHorizontal, Edit2, UserCircle, BookText, Route, Layout, Film, MessageCircle, Clock } from 'lucide-react';
+import { MoreHorizontal, Edit2, UserCircle, BookText, Route, Layout, Film, MessageCircle, Clock, FileText } from 'lucide-react';
 import { StoryNodeData } from '../storyStructureTypes';
 
 interface StoryNodeProps {
@@ -18,36 +17,49 @@ const StoryNode = ({ id, data, isConnectable, selected }: StoryNodeProps) => {
   const getBgColor = () => {
     const nodeType = data.type;
     
+    const hasContent = data.content && String(data.content).trim().length > 0;
+    
     switch (nodeType) {
-      case 'story': return 'bg-indigo-50 border-indigo-400';
-      case 'storyline': return 'bg-blue-50 border-blue-400';
-      case 'sequence': return 'bg-green-50 border-green-400';
+      case 'story': 
+        return hasContent ? 'bg-indigo-100 border-indigo-500' : 'bg-indigo-50 border-indigo-400';
+      case 'storyline': 
+        return hasContent ? 'bg-blue-100 border-blue-500' : 'bg-blue-50 border-blue-400';
+      case 'sequence': 
+        return hasContent ? 'bg-green-100 border-green-500' : 'bg-green-50 border-green-400';
       case 'scene': 
-        if (data.phase === 'ki') return 'bg-blue-50 border-blue-400';
-        if (data.phase === 'sho') return 'bg-green-50 border-green-400';
-        if (data.phase === 'ten') return 'bg-orange-50 border-orange-400';
-        if (data.phase === 'ketsu') return 'bg-purple-50 border-purple-400';
-        return 'bg-cyan-50 border-cyan-400';
-      case 'action': return 'bg-yellow-50 border-yellow-400';
-      default: return 'bg-gray-50 border-gray-400';
+        if (data.phase === 'ki') return hasContent ? 'bg-blue-100 border-blue-500' : 'bg-blue-50 border-blue-400';
+        if (data.phase === 'sho') return hasContent ? 'bg-green-100 border-green-500' : 'bg-green-50 border-green-400';
+        if (data.phase === 'ten') return hasContent ? 'bg-orange-100 border-orange-500' : 'bg-orange-50 border-orange-400';
+        if (data.phase === 'ketsu') return hasContent ? 'bg-purple-100 border-purple-500' : 'bg-purple-50 border-purple-400';
+        return hasContent ? 'bg-cyan-100 border-cyan-500' : 'bg-cyan-50 border-cyan-400';
+      case 'action': 
+        return hasContent ? 'bg-yellow-100 border-yellow-500' : 'bg-yellow-50 border-yellow-400';
+      default: 
+        return hasContent ? 'bg-gray-100 border-gray-500' : 'bg-gray-50 border-gray-400';
     }
   };
 
   const getHeaderColor = () => {
     const nodeType = data.type;
+    const hasContent = data.content && String(data.content).trim().length > 0;
     
     switch (nodeType) {
-      case 'story': return 'bg-indigo-100';
-      case 'storyline': return 'bg-blue-100';
-      case 'sequence': return 'bg-green-100';
+      case 'story': 
+        return hasContent ? 'bg-indigo-200' : 'bg-indigo-100';
+      case 'storyline': 
+        return hasContent ? 'bg-blue-200' : 'bg-blue-100';
+      case 'sequence': 
+        return hasContent ? 'bg-green-200' : 'bg-green-100';
       case 'scene': 
-        if (data.phase === 'ki') return 'bg-blue-100';
-        if (data.phase === 'sho') return 'bg-green-100';
-        if (data.phase === 'ten') return 'bg-orange-100';
-        if (data.phase === 'ketsu') return 'bg-purple-100';
-        return 'bg-cyan-100';
-      case 'action': return 'bg-yellow-100';
-      default: return 'bg-gray-100';
+        if (data.phase === 'ki') return hasContent ? 'bg-blue-200' : 'bg-blue-100';
+        if (data.phase === 'sho') return hasContent ? 'bg-green-200' : 'bg-green-100';
+        if (data.phase === 'ten') return hasContent ? 'bg-orange-200' : 'bg-orange-100';
+        if (data.phase === 'ketsu') return hasContent ? 'bg-purple-200' : 'bg-purple-100';
+        return hasContent ? 'bg-cyan-200' : 'bg-cyan-100';
+      case 'action': 
+        return hasContent ? 'bg-yellow-200' : 'bg-yellow-100';
+      default: 
+        return hasContent ? 'bg-gray-200' : 'bg-gray-100';
     }
   };
 
@@ -96,6 +108,8 @@ const StoryNode = ({ id, data, isConnectable, selected }: StoryNodeProps) => {
     }
   };
 
+  const hasContent = data.content && String(data.content).trim().length > 0;
+
   return (
     <div 
       className={cn(
@@ -124,7 +138,12 @@ const StoryNode = ({ id, data, isConnectable, selected }: StoryNodeProps) => {
           <span className="ml-1">{data.title || 'タイトルなし'}</span>
         </div>
         
-        <div className={cn("transition-opacity", isHovered || selected ? "opacity-100" : "opacity-0")}>
+        <div className={cn("transition-opacity flex items-center gap-1", isHovered || selected ? "opacity-100" : "opacity-0")}>
+          {hasContent && (
+            <span className="w-4 h-4 flex items-center justify-center">
+              <FileText size={12} className="text-green-600" />
+            </span>
+          )}
           <button className="p-1 rounded-md hover:bg-gray-200/50 transition-colors">
             <MoreHorizontal size={16} />
           </button>
@@ -143,6 +162,13 @@ const StoryNode = ({ id, data, isConnectable, selected }: StoryNodeProps) => {
           <div className="mt-2 text-xs flex items-center text-gray-500">
             <Clock size={12} className="mr-1" />
             時系列位置: {data.timePosition}
+          </div>
+        )}
+        
+        {hasContent && (
+          <div className="mt-2 text-xs bg-white/70 p-1.5 rounded border border-gray-200 line-clamp-2">
+            {String(data.content).substring(0, 100)}
+            {String(data.content).length > 100 && '...'}
           </div>
         )}
       </div>

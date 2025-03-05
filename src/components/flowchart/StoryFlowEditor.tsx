@@ -43,11 +43,23 @@ import {
   UserCircle,
   Clock,
   ArrowDownUp,
-  FileSymlink
+  FileSymlink,
+  Sparkles,
+  Settings
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { StoryNodeData, FlowStoryNode } from './storyStructureTypes';
 import PlotInitializer from '../plotCreator/PlotInitializer';
+import AuthorSettingsModal from './AuthorSettingsModal';
+import StoryGenerationModal from './StoryGenerationModal';
+import { 
+  AuthorInfo, 
+  defaultAuthorInfo, 
+  getAllParentNodes, 
+  getAllDescendantNodes,
+  createGenerationPrompt,
+  generateContent
+} from '@/utils/storyGenerationUtils';
 
 const nodeTypes = {
   storyNode: StoryNode,
@@ -63,6 +75,14 @@ const StoryFlowEditorContent = () => {
   const [showTimeline, setShowTimeline] = useState(true);
   const [showPlotInitializer, setShowPlotInitializer] = useState(false);
   
+  const [authorInfo, setAuthorInfo] = useState<AuthorInfo>(defaultAuthorInfo);
+  const [showAuthorSettings, setShowAuthorSettings] = useState(false);
+  const [showGenerationModal, setShowGenerationModal] = useState(false);
+  const [nodesToGenerate, setNodesToGenerate] = useState<Node<StoryNodeData>[]>([]);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedResults, setGeneratedResults] = useState<{ id: string; content: string }[]>([]);
+  
   const reactFlowInstance = useReactFlow();
 
   useEffect(() => {
@@ -76,6 +96,15 @@ const StoryFlowEditorContent = () => {
     } catch (error) {
       console.error('Error checking saved flow:', error);
       setShowPlotInitializer(true);
+    }
+    
+    try {
+      const savedAuthorInfo = localStorage.getItem('authorInfo');
+      if (savedAuthorInfo) {
+        setAuthorInfo(JSON.parse(savedAuthorInfo));
+      }
+    } catch (error) {
+      console.error('Error loading author info:', error);
     }
   }, []);
   
@@ -301,7 +330,9 @@ const StoryFlowEditorContent = () => {
     const flow = reactFlowInstance.toObject();
     localStorage.setItem('storyflow', JSON.stringify(flow));
     toast.success('ストーリーフローを保存しました');
-  }, [reactFlowInstance]);
+    
+    localStorage.setItem('authorInfo', JSON.stringify(authorInfo));
+  }, [reactFlowInstance, authorInfo]);
   
   const loadSavedFlow = useCallback(() => {
     try {
@@ -371,7 +402,7 @@ const StoryFlowEditorContent = () => {
   const handleTimelineNodesUpdate = useCallback((updatedNodes: Node<StoryNodeData>[]) => {
     setNodes(updatedNodes);
   }, [setNodes]);
-
+  
   const handleCreatePlot = useCallback((newNodes: Node<StoryNodeData>[]) => {
     const newEdges: Edge[] = [];
     
@@ -413,6 +444,81 @@ const StoryFlowEditorContent = () => {
     
     setShowPlotInitializer(true);
   }, [nodes]);
+  
+  const handleStartGeneration = useCallback(() => {
+    if (!selectedNode) {
+      toast.error('ノードが選択されていません');
+      return;
+    }
+    
+    const descendants = getAllDescendantNodes(selectedNode.id, nodes, edges);
+    const allNodesToGenerate = [selectedNode, ...descendants];
+    
+    setNodesToGenerate(allNodesToGenerate);
+    setGenerationProgress(0);
+    setIsGenerating(true);
+    setGeneratedResults([]);
+    setShowGenerationModal(true);
+    
+    const generateStories = async () => {
+      const results: { id: string; content: string }[] = [];
+      
+      for (let i = 0; i < allNodesToGenerate.length; i++) {
+        const node = allNodesToGenerate[i];
+        
+        try {
+          const parentNodes = getAllParentNodes(node.id, nodes, edges);
+          const prompt = createGenerationPrompt(node, parentNodes, authorInfo);
+          const content = await generateContent(prompt);
+          
+          results.push({
+            id: node.id,
+            content
+          });
+          
+          const progress = Math.round(((i + 1) / allNodesToGenerate.length) * 100);
+          setGenerationProgress(progress);
+          setGeneratedResults([...results]);
+        } catch (error) {
+          console.error(`Error generating content for node ${node.id}:`, error);
+          toast.error(`ノード「${node.data.title}」の文章生成に失敗しました`);
+        }
+      }
+      
+      setIsGenerating(false);
+    };
+    
+    generateStories();
+  }, [selectedNode, nodes, edges, authorInfo]);
+  
+  const handleApplyGeneratedContent = useCallback((results: { id: string; content: string }[]) => {
+    setNodes(nds => {
+      return nds.map(node => {
+        const result = results.find(r => r.id === node.id);
+        if (result) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              content: result.content
+            }
+          };
+        }
+        return node;
+      });
+    });
+    
+    toast.success('生成された文章を適用しました');
+    setShowGenerationModal(false);
+    
+    setTimeout(saveFlow, 100);
+  }, [setNodes, saveFlow]);
+  
+  const handleSaveAuthorSettings = useCallback((newAuthorInfo: AuthorInfo) => {
+    setAuthorInfo(newAuthorInfo);
+    localStorage.setItem('authorInfo', JSON.stringify(newAuthorInfo));
+    toast.success('作家設定を保存しました');
+  }, []);
   
   return (
     <div className="w-full h-full flex flex-col">
@@ -500,7 +606,24 @@ const StoryFlowEditorContent = () => {
             </div>
             
             {selectedNode && (
-              <div className="p-3 bg-white rounded-lg shadow-md">
+              <div className="p-3 bg-white rounded-lg shadow-md flex gap-2">
+                <Button 
+                  size="sm" 
+                  variant="default" 
+                  onClick={handleStartGeneration}
+                  className="bg-green-500 hover:bg-green-600 text-white"
+                >
+                  <Sparkles className="h-4 w-4 mr-1" />
+                  文章生成
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => setShowAuthorSettings(true)}
+                >
+                  <Settings className="h-4 w-4 mr-1" />
+                  作家設定
+                </Button>
                 <Button 
                   size="sm" 
                   variant="destructive" 
@@ -627,6 +750,23 @@ const StoryFlowEditorContent = () => {
         isOpen={showPlotInitializer}
         onClose={() => setShowPlotInitializer(false)}
         onCreatePlot={handleCreatePlot}
+      />
+
+      <AuthorSettingsModal
+        isOpen={showAuthorSettings}
+        onClose={() => setShowAuthorSettings(false)}
+        authorInfo={authorInfo}
+        onSave={handleSaveAuthorSettings}
+      />
+
+      <StoryGenerationModal
+        isOpen={showGenerationModal}
+        onClose={() => setShowGenerationModal(false)}
+        nodesToGenerate={nodesToGenerate}
+        onGenerationComplete={handleApplyGeneratedContent}
+        generationProgress={generationProgress}
+        isGenerating={isGenerating}
+        generatedResults={generatedResults}
       />
     </div>
   );

@@ -11,7 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BookText, Route, Layout, Film, UserCircle, Clock, ArrowRight, Info } from 'lucide-react';
+import { BookText, Route, Layout, Film, UserCircle, Clock, ArrowRight, Info, FileText, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface NodeDetailPanelProps {
@@ -27,6 +27,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
   const [characters, setCharacters] = useState<string[]>([]);
   const [phase, setPhase] = useState<StoryPhase>('ki');
   const [timePosition, setTimePosition] = useState<number>(0);
+  const [activeTab, setActiveTab] = useState('info');
   
   useEffect(() => {
     if (selectedNode) {
@@ -54,6 +55,13 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
       } else {
         setTimePosition(0);
       }
+      
+      // コンテンツがあるノードの場合、自動的にコンテンツタブを表示
+      if ('content' in selectedNode.data && selectedNode.data.content) {
+        setActiveTab('content');
+      } else {
+        setActiveTab('info');
+      }
     } else {
       setTitle('');
       setDescription('');
@@ -62,6 +70,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
       setCharacters([]);
       setPhase('ki');
       setTimePosition(0);
+      setActiveTab('info');
     }
   }, [selectedNode]);
   
@@ -150,93 +159,129 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
     );
   }
   
+  const hasContent = selectedNode.data.content && String(selectedNode.data.content).trim().length > 0;
+  
   return (
     <div className="h-full p-4">
       <div className="flex items-center mb-4">
         {getNodeIcon()}
         <h3 className="text-lg font-medium">{getNodeTypeLabel()} の詳細</h3>
+        {hasContent && (
+          <div className="ml-auto flex items-center gap-1">
+            <FileText className="h-4 w-4 text-green-600" />
+            <span className="text-xs text-green-600">執筆済み</span>
+          </div>
+        )}
       </div>
       
-      <div className="grid grid-cols-1 gap-4 mb-4">
-        <div>
-          <Label htmlFor="node-title">タイトル</Label>
-          <Input 
-            id="node-title" 
-            value={title} 
-            onChange={handleTitleChange}
-            className="mt-1"
-          />
-        </div>
-      </div>
-      
-      <div className="mb-4">
-        <Label htmlFor="node-description">説明</Label>
-        <Textarea 
-          id="node-description" 
-          value={description} 
-          onChange={handleDescriptionChange}
-          className="mt-1 resize-none h-20"
-        />
-      </div>
-      
-      {(selectedNode.data.type === 'scene' || selectedNode.data.type === 'action') && (
-        <div className="mb-4">
-          <Label htmlFor="node-content">内容</Label>
-          <Textarea 
-            id="node-content" 
-            value={content} 
-            onChange={handleContentChange}
-            className="mt-1 resize-none h-24"
-          />
-        </div>
-      )}
-      
-      {(selectedNode.data.type === 'scene') && (
-        <div className="mb-4">
-          <Label className="mb-1 block">物語の局面</Label>
-          <Select value={phase} onValueChange={handlePhaseChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="局面を選択..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ki">起 (導入)</SelectItem>
-              <SelectItem value="sho">承 (展開)</SelectItem>
-              <SelectItem value="ten">転 (転換)</SelectItem>
-              <SelectItem value="ketsu">結 (結末)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      )}
-      
-      {(selectedNode.data.type === 'scene' || selectedNode.data.type === 'action') && (
-        <div className="mb-4">
-          <div className="flex items-center mb-1">
-            <Label htmlFor="time-position" className="flex items-center">
-              <Clock className="h-4 w-4 mr-1" />
-              時系列位置
-            </Label>
-            <div className="ml-auto flex items-center">
-              <Info className="h-4 w-4 mr-1 text-gray-400" />
-              <span className="text-xs text-gray-500">時系列の順序を表します（並び替えには「タイムライン」のドラッグを使用）</span>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="h-[calc(100%-40px)]">
+        <TabsList>
+          <TabsTrigger value="info" className="flex items-center gap-1">
+            <Info className="h-4 w-4" />
+            基本情報
+          </TabsTrigger>
+          <TabsTrigger value="content" className="flex items-center gap-1">
+            <FileText className="h-4 w-4" />
+            コンテンツ
+            {hasContent && <span className="ml-1 w-2 h-2 bg-green-500 rounded-full"></span>}
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="info" className="h-[calc(100%-40px)] overflow-y-auto">
+          <div className="grid grid-cols-1 gap-4 mb-4">
+            <div>
+              <Label htmlFor="node-title">タイトル</Label>
+              <Input 
+                id="node-title" 
+                value={title} 
+                onChange={handleTitleChange}
+                className="mt-1"
+              />
             </div>
           </div>
-          <div className="mt-2 px-1">
-            <Slider
-              id="time-position"
-              defaultValue={[timePosition]}
-              value={[timePosition]}
-              max={100}
-              step={1}
-              onValueChange={handleTimePositionChange}
+          
+          <div className="mb-4">
+            <Label htmlFor="node-description">説明</Label>
+            <Textarea 
+              id="node-description" 
+              value={description} 
+              onChange={handleDescriptionChange}
+              className="mt-1 resize-none h-20"
             />
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>早い</span>
-              <span>{timePosition}%</span>
-              <span>遅い</span>
-            </div>
           </div>
-        </div>
-      )}
+          
+          {(selectedNode.data.type === 'scene') && (
+            <div className="mb-4">
+              <Label className="mb-1 block">物語の局面</Label>
+              <Select value={phase} onValueChange={handlePhaseChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="局面を選択..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ki">起 (導入)</SelectItem>
+                  <SelectItem value="sho">承 (展開)</SelectItem>
+                  <SelectItem value="ten">転 (転換)</SelectItem>
+                  <SelectItem value="ketsu">結 (結末)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          
+          {(selectedNode.data.type === 'scene' || selectedNode.data.type === 'action') && (
+            <div className="mb-4">
+              <div className="flex items-center mb-1">
+                <Label htmlFor="time-position" className="flex items-center">
+                  <Clock className="h-4 w-4 mr-1" />
+                  時系列位置
+                </Label>
+                <div className="ml-auto flex items-center">
+                  <Info className="h-4 w-4 mr-1 text-gray-400" />
+                  <span className="text-xs text-gray-500">時系列の順序を表します（並び替えには「タイムライン」のドラッグを使用）</span>
+                </div>
+              </div>
+              <div className="mt-2 px-1">
+                <Slider
+                  id="time-position"
+                  defaultValue={[timePosition]}
+                  value={[timePosition]}
+                  max={100}
+                  step={1}
+                  onValueChange={handleTimePositionChange}
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>早い</span>
+                  <span>{timePosition}%</span>
+                  <span>遅い</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="content" className="h-[calc(100%-40px)] overflow-y-auto">
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <Label htmlFor="node-content" className="flex items-center">
+                <FileText className="h-4 w-4 mr-1" />
+                文章内容
+              </Label>
+              {hasContent && (
+                <span className="text-xs text-green-600 flex items-center">
+                  <Sparkles className="h-3 w-3 mr-1" />
+                  執筆済み
+                </span>
+              )}
+            </div>
+            <Textarea 
+              id="node-content" 
+              value={content} 
+              onChange={handleContentChange}
+              className="mt-1 resize-none h-[calc(100vh-420px)]"
+              placeholder="ここに文章を入力するか、「文章生成」ボタンを使ってAIに文章を生成してもらいましょう。"
+            />
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
