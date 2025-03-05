@@ -162,8 +162,8 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
   const hasContent = selectedNode.data.content && String(selectedNode.data.content).trim().length > 0;
   
   return (
-    <div className="h-full p-4">
-      <div className="flex items-center mb-4">
+    <div className="h-full flex flex-col overflow-hidden">
+      <div className="flex items-center p-4 pb-2">
         {getNodeIcon()}
         <h3 className="text-lg font-medium">{getNodeTypeLabel()} の詳細</h3>
         {hasContent && (
@@ -174,8 +174,8 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
         )}
       </div>
       
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="h-[calc(100%-40px)]">
-        <TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+        <TabsList className="px-4">
           <TabsTrigger value="info" className="flex items-center gap-1">
             <Info className="h-4 w-4" />
             基本情報
@@ -187,99 +187,103 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="info" className="h-[calc(100%-40px)] overflow-y-auto">
-          <div className="grid grid-cols-1 gap-4 mb-4">
-            <div>
-              <Label htmlFor="node-title">タイトル</Label>
-              <Input 
-                id="node-title" 
-                value={title} 
-                onChange={handleTitleChange}
-                className="mt-1"
+        <TabsContent value="info" className="flex-1 overflow-hidden px-4 pt-2 pb-4">
+          <ScrollArea className="h-full pr-2">
+            <div className="grid grid-cols-1 gap-4 mb-4">
+              <div>
+                <Label htmlFor="node-title">タイトル</Label>
+                <Input 
+                  id="node-title" 
+                  value={title} 
+                  onChange={handleTitleChange}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+            
+            <div className="mb-4">
+              <Label htmlFor="node-description">説明</Label>
+              <Textarea 
+                id="node-description" 
+                value={description} 
+                onChange={handleDescriptionChange}
+                className="mt-1 resize-none h-20"
               />
             </div>
-          </div>
-          
-          <div className="mb-4">
-            <Label htmlFor="node-description">説明</Label>
-            <Textarea 
-              id="node-description" 
-              value={description} 
-              onChange={handleDescriptionChange}
-              className="mt-1 resize-none h-20"
-            />
-          </div>
-          
-          {(selectedNode.data.type === 'scene') && (
-            <div className="mb-4">
-              <Label className="mb-1 block">物語の局面</Label>
-              <Select value={phase} onValueChange={handlePhaseChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="局面を選択..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ki">起 (導入)</SelectItem>
-                  <SelectItem value="sho">承 (展開)</SelectItem>
-                  <SelectItem value="ten">転 (転換)</SelectItem>
-                  <SelectItem value="ketsu">結 (結末)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          
-          {(selectedNode.data.type === 'scene' || selectedNode.data.type === 'action') && (
-            <div className="mb-4">
-              <div className="flex items-center mb-1">
-                <Label htmlFor="time-position" className="flex items-center">
-                  <Clock className="h-4 w-4 mr-1" />
-                  時系列位置
-                </Label>
-                <div className="ml-auto flex items-center">
-                  <Info className="h-4 w-4 mr-1 text-gray-400" />
-                  <span className="text-xs text-gray-500 dark:text-gray-400">時系列の順序を表します（並び替えには「タイムライン」のドラッグを使用）</span>
+            
+            {(selectedNode.data.type === 'scene') && (
+              <div className="mb-4">
+                <Label className="mb-1 block">物語の局面</Label>
+                <Select value={phase} onValueChange={handlePhaseChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="局面を選択..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ki">起 (導入)</SelectItem>
+                    <SelectItem value="sho">承 (展開)</SelectItem>
+                    <SelectItem value="ten">転 (転換)</SelectItem>
+                    <SelectItem value="ketsu">結 (結末)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            
+            {(selectedNode.data.type === 'scene' || selectedNode.data.type === 'action') && (
+              <div className="mb-4">
+                <div className="flex items-center mb-1">
+                  <Label htmlFor="time-position" className="flex items-center">
+                    <Clock className="h-4 w-4 mr-1" />
+                    時系列位置
+                  </Label>
+                  <div className="ml-auto flex items-center">
+                    <Info className="h-4 w-4 mr-1 text-gray-400" />
+                    <span className="text-xs text-gray-500 dark:text-gray-400">時系列の順序を表します（並び替えには「タイムライン」のドラッグを使用）</span>
+                  </div>
+                </div>
+                <div className="mt-2 px-1">
+                  <Slider
+                    id="time-position"
+                    defaultValue={[timePosition]}
+                    value={[timePosition]}
+                    max={100}
+                    step={1}
+                    onValueChange={handleTimePositionChange}
+                  />
+                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    <span>早い</span>
+                    <span>{timePosition}%</span>
+                    <span>遅い</span>
+                  </div>
                 </div>
               </div>
-              <div className="mt-2 px-1">
-                <Slider
-                  id="time-position"
-                  defaultValue={[timePosition]}
-                  value={[timePosition]}
-                  max={100}
-                  step={1}
-                  onValueChange={handleTimePositionChange}
-                />
-                <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  <span>早い</span>
-                  <span>{timePosition}%</span>
-                  <span>遅い</span>
-                </div>
-              </div>
-            </div>
-          )}
+            )}
+          </ScrollArea>
         </TabsContent>
         
-        <TabsContent value="content" className="h-[calc(100%-40px)] overflow-y-auto">
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <Label htmlFor="node-content" className="flex items-center">
-                <FileText className="h-4 w-4 mr-1" />
-                文章内容
-              </Label>
-              {hasContent && (
-                <span className="text-xs text-green-600 dark:text-green-500 flex items-center">
-                  <Sparkles className="h-3 w-3 mr-1" />
-                  執筆済み
-                </span>
-              )}
+        <TabsContent value="content" className="flex-1 overflow-hidden px-4 pt-2 pb-4">
+          <ScrollArea className="h-full pr-2">
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <Label htmlFor="node-content" className="flex items-center">
+                  <FileText className="h-4 w-4 mr-1" />
+                  文章内容
+                </Label>
+                {hasContent && (
+                  <span className="text-xs text-green-600 dark:text-green-500 flex items-center">
+                    <Sparkles className="h-3 w-3 mr-1" />
+                    執筆済み
+                  </span>
+                )}
+              </div>
+              <Textarea 
+                id="node-content" 
+                value={content} 
+                onChange={handleContentChange}
+                className="mt-1 resize-none min-h-[calc(100vh-400px)]"
+                placeholder="ここに文章を入力するか、「文章生成」ボタンを使ってAIに文章を生成してもらいましょう。"
+              />
             </div>
-            <Textarea 
-              id="node-content" 
-              value={content} 
-              onChange={handleContentChange}
-              className="mt-1 resize-none h-[calc(100vh-420px)]"
-              placeholder="ここに文章を入力するか、「文章生成」ボタンを使ってAIに文章を生成してもらいましょう。"
-            />
-          </div>
+          </ScrollArea>
         </TabsContent>
       </Tabs>
     </div>
