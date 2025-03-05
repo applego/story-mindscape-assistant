@@ -1,3 +1,4 @@
+
 import { Node } from '@xyflow/react';
 import { StoryNodeData } from '@/components/flowchart/storyStructureTypes';
 import { toast } from 'sonner';
@@ -44,23 +45,29 @@ export const createGenerationPrompt = (
     basePrompt += '\n\n前提情報:\n';
     
     parentNodes.forEach((parent, index) => {
-      basePrompt += `${index + 1}. ${parent.data.type === 'story' ? 'ストーリー' : 
-        parent.data.type === 'storyline' ? 'ストーリーライン' : 
-        parent.data.type === 'sequence' ? 'シークエンス' : 
-        parent.data.type === 'scene' ? 'シーン' : 'アクション'}: ${parent.data.title || 'タイトルなし'}\n`;
+      // 親ノードのデータが適切に型付けされていることを確認
+      if (parent && parent.data) {
+        const nodeTypeLabel = 
+          parent.data.type === 'story' ? 'ストーリー' : 
+          parent.data.type === 'storyline' ? 'ストーリーライン' : 
+          parent.data.type === 'sequence' ? 'シークエンス' : 
+          parent.data.type === 'scene' ? 'シーン' : 'アクション';
         
-      if (parent.data.description) {
-        basePrompt += `   説明: ${parent.data.description}\n`;
-      }
-      
-      // 親ノードのコンテンツ情報があれば追加
-      if (parent.data.content) {
-        basePrompt += `   内容: ${parent.data.content}\n`;
-      }
-      
-      // キャラクター情報があれば追加
-      if (parent.data.characters && parent.data.characters.length > 0) {
-        basePrompt += `   登場キャラクター: ${parent.data.characters.join(', ')}\n`;
+        basePrompt += `${index + 1}. ${nodeTypeLabel}: ${parent.data.title || 'タイトルなし'}\n`;
+          
+        if (parent.data.description) {
+          basePrompt += `   説明: ${parent.data.description}\n`;
+        }
+        
+        // 親ノードのコンテンツ情報があれば追加
+        if (parent.data.content) {
+          basePrompt += `   内容: ${parent.data.content}\n`;
+        }
+        
+        // キャラクター情報があれば追加
+        if (parent.data.characters && parent.data.characters.length > 0) {
+          basePrompt += `   登場キャラクター: ${parent.data.characters.join(', ')}\n`;
+        }
       }
     });
   }
