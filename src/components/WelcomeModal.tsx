@@ -12,7 +12,11 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen, Users, MessageSquare, GitBranch } from "lucide-react";
 
-const WelcomeModal = () => {
+interface WelcomeModalProps {
+  onClose: () => void;
+}
+
+const WelcomeModal = ({ onClose }: WelcomeModalProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
@@ -26,6 +30,7 @@ const WelcomeModal = () => {
   const handleClose = () => {
     localStorage.setItem("hasSeenWelcome", "true");
     setIsOpen(false);
+    onClose(); // Call the parent's onClose handler
   };
 
   return (
