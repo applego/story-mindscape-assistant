@@ -32,7 +32,7 @@ const AuthorSettingsModal: React.FC<AuthorSettingsModalProps> = ({
   const [style, setStyle] = useState(authorInfo.style);
   const [genres, setGenres] = useState<string[]>(authorInfo.preferredGenres);
   const [newGenre, setNewGenre] = useState('');
-  const [writingStyle, setWritingStyle] = useState(authorInfo.writingStyle);
+  const [writingPrompt, setWritingPrompt] = useState(authorInfo.writingPrompt);
 
   const handleAddGenre = () => {
     if (newGenre.trim() !== '' && !genres.includes(newGenre.trim())) {
@@ -50,7 +50,7 @@ const AuthorSettingsModal: React.FC<AuthorSettingsModalProps> = ({
       name: name.trim() || defaultAuthorInfo.name,
       style: style.trim() || defaultAuthorInfo.style,
       preferredGenres: genres.length > 0 ? genres : defaultAuthorInfo.preferredGenres,
-      writingStyle: writingStyle.trim() || defaultAuthorInfo.writingStyle,
+      writingPrompt: writingPrompt.trim() || defaultAuthorInfo.writingPrompt,
     };
 
     onSave(updatedAuthorInfo);
@@ -61,7 +61,7 @@ const AuthorSettingsModal: React.FC<AuthorSettingsModalProps> = ({
     setName(defaultAuthorInfo.name);
     setStyle(defaultAuthorInfo.style);
     setGenres([...defaultAuthorInfo.preferredGenres]);
-    setWritingStyle(defaultAuthorInfo.writingStyle);
+    setWritingPrompt(defaultAuthorInfo.writingPrompt);
   };
 
   return (
@@ -144,13 +144,13 @@ const AuthorSettingsModal: React.FC<AuthorSettingsModalProps> = ({
           </div>
 
           <div className="grid grid-cols-4 gap-4">
-            <Label htmlFor="writing-style" className="text-right">
+            <Label htmlFor="writing-prompt" className="text-right">
               文体指示
             </Label>
             <Textarea
-              id="writing-style"
-              value={writingStyle}
-              onChange={(e) => setWritingStyle(e.target.value)}
+              id="writing-prompt"
+              value={writingPrompt}
+              onChange={(e) => setWritingPrompt(e.target.value)}
               className="col-span-3 min-h-[100px]"
               placeholder="どのような文体で生成するかの指示を入力"
             />
