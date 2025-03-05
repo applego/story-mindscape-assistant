@@ -7,7 +7,7 @@ export const sampleStoryNodes: Node<StoryNodeData>[] = [
   {
     id: 'story-1',
     data: { 
-      id: 'story-1',  // Added the required id property
+      id: 'story-1',
       type: 'story', 
       title: 'サンプルストーリー',
       description: 'これはサンプルストーリーです。',
@@ -18,7 +18,7 @@ export const sampleStoryNodes: Node<StoryNodeData>[] = [
   {
     id: 'storyline-1',
     data: { 
-      id: 'storyline-1',  // Added the required id property
+      id: 'storyline-1',
       type: 'storyline', 
       title: '第一章：出会い',
       description: '主人公が出会うシーン。',
@@ -27,12 +27,14 @@ export const sampleStoryNodes: Node<StoryNodeData>[] = [
     },
     position: { x: 250, y: 50 },
     type: 'storyNode',
-    parentNode: 'story-1',
+    // Replacing parentNode with the correct property expected by @xyflow/react
+    extent: 'parent',
+    expandParent: true,
   },
   {
     id: 'sequence-1',
     data: { 
-      id: 'sequence-1',  // Added the required id property
+      id: 'sequence-1',
       type: 'sequence', 
       title: '街中での出会い',
       description: '街中で偶然出会うシーンのシークエンス。',
@@ -41,12 +43,14 @@ export const sampleStoryNodes: Node<StoryNodeData>[] = [
     },
     position: { x: 450, y: 50 },
     type: 'storyNode',
-    parentNode: 'storyline-1',
+    // Replacing parentNode with the correct property expected by @xyflow/react
+    extent: 'parent',
+    expandParent: true,
   },
   {
     id: 'scene-1',
     data: { 
-      id: 'scene-1',  // Added the required id property
+      id: 'scene-1',
       type: 'scene', 
       title: 'カフェでの出会い',
       description: 'カフェで初めて言葉を交わすシーン。',
@@ -57,12 +61,14 @@ export const sampleStoryNodes: Node<StoryNodeData>[] = [
     },
     position: { x: 650, y: 50 },
     type: 'storyNode',
-    parentNode: 'sequence-1',
+    // Replacing parentNode with the correct property expected by @xyflow/react
+    extent: 'parent',
+    expandParent: true,
   },
   {
     id: 'action-1',
     data: { 
-      id: 'action-1',  // Added the required id property
+      id: 'action-1',
       type: 'action', 
       title: '自己紹介',
       description: 'お互いに自己紹介をする。',
@@ -74,7 +80,9 @@ export const sampleStoryNodes: Node<StoryNodeData>[] = [
     },
     position: { x: 850, y: 50 },
     type: 'storyNode',
-    parentNode: 'scene-1',
+    // Replacing parentNode with the correct property expected by @xyflow/react
+    extent: 'parent',
+    expandParent: true,
   }
 ];
 
