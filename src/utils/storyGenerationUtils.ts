@@ -1,4 +1,3 @@
-
 import { Node } from '@xyflow/react';
 import { StoryNodeData } from '@/components/flowchart/storyStructureTypes';
 import { toast } from 'sonner';
@@ -16,28 +15,28 @@ export const createGenerationPrompt = (
   
   switch (node.data.type) {
     case 'story':
-      basePrompt = `「${node.data.title}」というタイトルのストーリーの全体的な概要を書いてください。`;
+      basePrompt = `「${node.data.title || 'タイトルなし'}」というタイトルのストーリーの全体的な概要を書いてください。`;
       break;
     case 'storyline':
-      basePrompt = `「${node.data.title}」というストーリーラインの展開について詳細に書いてください。`;
+      basePrompt = `「${node.data.title || 'タイトルなし'}」というストーリーラインの展開について詳細に書いてください。`;
       break;
     case 'sequence':
-      basePrompt = `「${node.data.title}」というシークエンスのイベントの流れを書いてください。`;
+      basePrompt = `「${node.data.title || 'タイトルなし'}」というシークエンスのイベントの流れを書いてください。`;
       break;
     case 'scene':
       const phaseText = getPhaseText(node.data.phase);
-      basePrompt = `「${node.data.title}」というシーンの${phaseText}を書いてください。情景や登場人物の心情が伝わる具体的な描写を入れてください。`;
+      basePrompt = `「${node.data.title || 'タイトルなし'}」というシーンの${phaseText}を書いてください。情景や登場人物の心情が伝わる具体的な描写を入れてください。`;
       break;
     case 'action':
-      basePrompt = `「${node.data.title}」というアクションの詳細な描写を書いてください。`;
+      basePrompt = `「${node.data.title || 'タイトルなし'}」というアクションの詳細な描写を書いてください。`;
       if (node.data.actionType === 'dialogue') {
-        basePrompt = `「${node.data.title}」という台詞のシーンを会話形式で書いてください。`;
+        basePrompt = `「${node.data.title || 'タイトルなし'}」という台詞のシーンを会話形式で書いてください。`;
       } else if (node.data.actionType === 'thought') {
-        basePrompt = `「${node.data.title}」という思考の内容を内的独白として書いてください。`;
+        basePrompt = `「${node.data.title || 'タイトルなし'}」という思考の内容を内的独白として書いてください。`;
       }
       break;
     default:
-      basePrompt = `「${node.data.title}」の内容を書いてください。`;
+      basePrompt = `「${node.data.title || 'タイトルなし'}」の内容を書いてください。`;
   }
   
   // 親ノードからの情報を追加
@@ -48,7 +47,7 @@ export const createGenerationPrompt = (
       basePrompt += `${index + 1}. ${parent.data.type === 'story' ? 'ストーリー' : 
         parent.data.type === 'storyline' ? 'ストーリーライン' : 
         parent.data.type === 'sequence' ? 'シークエンス' : 
-        parent.data.type === 'scene' ? 'シーン' : 'アクション'}: ${parent.data.title}\n`;
+        parent.data.type === 'scene' ? 'シーン' : 'アクション'}: ${parent.data.title || 'タイトルなし'}\n`;
         
       if (parent.data.description) {
         basePrompt += `   説明: ${parent.data.description}\n`;
@@ -207,4 +206,3 @@ export const generateContent = async (prompt: string): Promise<string> => {
     }, 1000);
   });
 };
-
