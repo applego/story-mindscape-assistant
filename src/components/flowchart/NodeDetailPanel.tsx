@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Node } from '@xyflow/react';
 import { StoryNodeData, StoryPhase } from './storyStructureTypes';
@@ -10,7 +11,8 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BookText, Route, Layout, Film, UserCircle, Clock, ArrowRight } from 'lucide-react';
+import { BookText, Route, Layout, Film, UserCircle, Clock, ArrowRight, Info } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface NodeDetailPanelProps {
   selectedNode: Node<StoryNodeData> | null;
@@ -155,7 +157,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
         <h3 className="text-lg font-medium">{getNodeTypeLabel()} の詳細</h3>
       </div>
       
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 gap-4 mb-4">
         <div>
           <Label htmlFor="node-title">タイトル</Label>
           <Input 
@@ -165,29 +167,6 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
             className="mt-1"
           />
         </div>
-        
-        {(selectedNode.data.type === 'scene' || selectedNode.data.type === 'action') && (
-          <div>
-            <Label className="flex items-center">
-              <Clock className="h-4 w-4 mr-1" />
-              時系列位置
-            </Label>
-            <div className="mt-2 px-1">
-              <Slider
-                defaultValue={[timePosition]}
-                value={[timePosition]}
-                max={100}
-                step={1}
-                onValueChange={handleTimePositionChange}
-              />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>早い</span>
-                <span>{timePosition}%</span>
-                <span>遅い</span>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
       
       <div className="mb-4">
@@ -226,6 +205,36 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
               <SelectItem value="ketsu">結 (結末)</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+      )}
+      
+      {(selectedNode.data.type === 'scene' || selectedNode.data.type === 'action') && (
+        <div className="mb-4">
+          <div className="flex items-center mb-1">
+            <Label htmlFor="time-position" className="flex items-center">
+              <Clock className="h-4 w-4 mr-1" />
+              時系列位置
+            </Label>
+            <div className="ml-auto flex items-center">
+              <Info className="h-4 w-4 mr-1 text-gray-400" />
+              <span className="text-xs text-gray-500">時系列の順序を表します（並び替えには「タイムライン」のドラッグを使用）</span>
+            </div>
+          </div>
+          <div className="mt-2 px-1">
+            <Slider
+              id="time-position"
+              defaultValue={[timePosition]}
+              value={[timePosition]}
+              max={100}
+              step={1}
+              onValueChange={handleTimePositionChange}
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>早い</span>
+              <span>{timePosition}%</span>
+              <span>遅い</span>
+            </div>
+          </div>
         </div>
       )}
     </div>
