@@ -14,20 +14,28 @@ import { BookOpen, MessageSquare, Users, Settings, Lightbulb, Home, Leaf, BookMa
 import { useState } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { Link, useLocation } from "react-router-dom";
 
 const StoryflowSidebar = () => {
-  const [activeTab, setActiveTab] = useState("home");
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(() => {
+    // Set the active tab based on the current path
+    const path = location.pathname;
+    if (path === "/") return "home";
+    if (path === "/plots" || path === "/index") return "plots";
+    return "home";
+  });
 
   const menuItems = [
-    { id: "home", icon: Home, label: "ホーム", description: "ダッシュボードと最近の作品" },
-    { id: "projects", icon: BookOpen, label: "プロジェクト", description: "作品一覧と管理" },
-    { id: "ideas", icon: Lightbulb, label: "アイデア", description: "ストーリーアイデアの整理" },
-    { id: "characters", icon: Users, label: "キャラクター", description: "キャラクター設定と関係図" },
-    { id: "plots", icon: FileText, label: "プロット", description: "ストーリー構成の作成" },
-    { id: "drafts", icon: BookMarked, label: "原稿", description: "執筆中の原稿管理" },
-    { id: "assistant", icon: MessageSquare, label: "アシスタント", description: "AIによる執筆サポート" },
-    { id: "themes", icon: Leaf, label: "テーマ", description: "ストーリーテーマの設計" },
-    { id: "settings", icon: Settings, label: "設定", description: "アプリ設定とプロフィール" },
+    { id: "home", icon: Home, label: "ホーム", description: "ダッシュボードと最近の作品", path: "/" },
+    { id: "projects", icon: BookOpen, label: "プロジェクト", description: "作品一覧と管理", path: "/projects" },
+    { id: "ideas", icon: Lightbulb, label: "アイデア", description: "ストーリーアイデアの整理", path: "/ideas" },
+    { id: "characters", icon: Users, label: "キャラクター", description: "キャラクター設定と関係図", path: "/characters" },
+    { id: "plots", icon: FileText, label: "プロット", description: "ストーリー構成の作成", path: "/" },
+    { id: "drafts", icon: BookMarked, label: "原稿", description: "執筆中の原稿管理", path: "/drafts" },
+    { id: "assistant", icon: MessageSquare, label: "アシスタント", description: "AIによる執筆サポート", path: "/assistant" },
+    { id: "themes", icon: Leaf, label: "テーマ", description: "ストーリーテーマの設計", path: "/themes" },
+    { id: "settings", icon: Settings, label: "設定", description: "アプリ設定とプロフィール", path: "/settings" },
   ];
 
   return (
@@ -50,16 +58,22 @@ const StoryflowSidebar = () => {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <SidebarMenuButton
+                          asChild
                           className={cn(
                             "w-full flex items-center justify-start h-10 rounded-md transition-all gap-3 px-3",
                             activeTab === item.id 
                               ? "bg-primary/10 text-primary" 
                               : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
                           )}
-                          onClick={() => setActiveTab(item.id)}
                         >
-                          <item.icon size={20} />
-                          <span className="hidden sm:inline-block">{item.label}</span>
+                          <Link 
+                            to={item.path} 
+                            onClick={() => setActiveTab(item.id)}
+                            className="flex items-center gap-3 w-full"
+                          >
+                            <item.icon size={20} />
+                            <span className="hidden sm:inline-block">{item.label}</span>
+                          </Link>
                         </SidebarMenuButton>
                       </TooltipTrigger>
                       <TooltipContent side="right">

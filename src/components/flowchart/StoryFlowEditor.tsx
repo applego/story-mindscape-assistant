@@ -42,10 +42,12 @@ import {
   Film,
   UserCircle,
   Clock,
-  ArrowDownUp
+  ArrowDownUp,
+  FileSymlink
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { StoryNodeData, FlowStoryNode } from './storyStructureTypes';
+import PlotInitializer from '../plotCreator/PlotInitializer';
 
 const nodeTypes = {
   storyNode: StoryNode,
@@ -59,43 +61,23 @@ const StoryFlowEditorContent = () => {
   const [showMenu, setShowMenu] = useState(false);
   const [showAIAssistant, setShowAIAssistant] = useState(false);
   const [showTimeline, setShowTimeline] = useState(true);
+  const [showPlotInitializer, setShowPlotInitializer] = useState(false);
   
   const reactFlowInstance = useReactFlow();
-  
+
   useEffect(() => {
     try {
       const savedFlow = localStorage.getItem('storyflow');
-      if (savedFlow) {
-        const flow = JSON.parse(savedFlow);
-        if (flow.nodes && flow.nodes.length > 0) {
-          setNodes(flow.nodes);
-          setEdges(flow.edges || []);
-          console.log('保存データを読み込みました');
-        } else {
-          console.log('保存データが空のため、初期データを使用します');
-          setNodes(initialStoryNodes);
-          setEdges(initialStoryEdges);
-        }
+      if (!savedFlow || JSON.parse(savedFlow).nodes.length === 0) {
+        setShowPlotInitializer(true);
       } else {
-        console.log('保存データがないため、初期データを使用します');
-        setNodes(initialStoryNodes);
-        setEdges(initialStoryEdges);
+        loadSavedFlow();
       }
     } catch (error) {
-      console.error('Flow loading error:', error);
-      setNodes(initialStoryNodes);
-      setEdges(initialStoryEdges);
+      console.error('Error checking saved flow:', error);
+      setShowPlotInitializer(true);
     }
-    
-    const timer = setTimeout(() => {
-      if (reactFlowInstance) {
-        reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: false });
-        console.log('ビューをリセットしました');
-      }
-    }, 300);
-    
-    return () => clearTimeout(timer);
-  }, [reactFlowInstance, setNodes, setEdges]);
+  }, []);
   
   const getAllDescendantIds = useCallback((nodeId: string): string[] => {
     const descendants: string[] = [];
@@ -389,6 +371,48 @@ const StoryFlowEditorContent = () => {
   const handleTimelineNodesUpdate = useCallback((updatedNodes: Node<StoryNodeData>[]) => {
     setNodes(updatedNodes);
   }, [setNodes]);
+
+  const handleCreatePlot = useCallback((newNodes: Node<StoryNodeData>[]) => {
+    const newEdges: Edge[] = [];
+    
+    for (let i = 0; i < newNodes.length - 1; i++) {
+      newEdges.push({
+        id: `edge-${newNodes[i].id}-${newNodes[i+1].id}`,
+        source: newNodes[i].id,
+        target: newNodes[i+1].id,
+        type: 'smoothstep',
+        animated: true,
+        style: { stroke: '#555' },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+        },
+      });
+    }
+    
+    setNodes(newNodes);
+    setEdges(newEdges);
+    
+    setTimeout(() => {
+      if (reactFlowInstance) {
+        reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: false });
+      }
+    }, 100);
+    
+    setTimeout(() => {
+      saveFlow();
+    }, 200);
+    
+    toast.success('新しいプロットを作成しました');
+  }, [setNodes, setEdges, reactFlowInstance, saveFlow]);
+  
+  const handleNewPlot = useCallback(() => {
+    if (nodes.length > 0) {
+      const confirmed = confirm('現在のプロットを破棄して新しいプロットを作成しますか？');
+      if (!confirmed) return;
+    }
+    
+    setShowPlotInitializer(true);
+  }, [nodes]);
   
   return (
     <div className="w-full h-full flex flex-col">
@@ -423,9 +447,9 @@ const StoryFlowEditorContent = () => {
           
           <Panel position="top-right" className="flex flex-col gap-2 z-10">
             <div className="flex gap-2 p-3 bg-white rounded-lg shadow-md mb-2">
-              <Button size="sm" variant="outline" onClick={() => addNewNode('story')}>
-                <BookText className="h-4 w-4 mr-1" />
-                ストーリー
+              <Button size="sm" variant="outline" onClick={handleNewPlot}>
+                <FileSymlink className="h-4 w-4 mr-1" />
+                新規プロット
               </Button>
               <Button size="sm" variant="outline" onClick={saveFlow}>
                 <Save className="h-4 w-4 mr-1" />
@@ -597,6 +621,12 @@ const StoryFlowEditorContent = () => {
         isOpen={showAIAssistant}
         onOpenChange={setShowAIAssistant}
         selectedNodeId={selectedNode?.id || null}
+      />
+
+      <PlotInitializer 
+        isOpen={showPlotInitializer}
+        onClose={() => setShowPlotInitializer(false)}
+        onCreatePlot={handleCreatePlot}
       />
     </div>
   );
