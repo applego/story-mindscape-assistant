@@ -77,10 +77,22 @@ export default {
 					"dark-sho": "#D97706",
 					"dark-ten": "#DC2626",
 					"dark-ketsu": "#059669",
-					"dark-gray": "#1F2937",
+					"dark-gray": "#1A1A1A", // 更に暗い背景色に変更
 					"dark-border": "#374151",
 					"dark-hover": "#111827",
 					"dark-text": "#F9FAFB",
+				},
+				// 日本の伝統的な色
+				japan: {
+					"indigo": "#223a70", // 藍色 - Indigo
+					"vermilion": "#c73e3a", // 朱色 - Vermilion
+					"jade": "#007270", // 翡翠 - Jade
+					"wisteria": "#87314e", // 藤色 - Wisteria
+					"gold": "#d9a62e", // 金 - Gold
+					"matcha": "#7c8c40", // 抹茶 - Matcha green
+					"sakura": "#f2a0a1", // 桜 - Cherry blossom
+					"ink": "#0d0d0d", // 墨 - Ink
+					"paper": "#f6f0e8", // 和紙 - Japanese paper
 				}
 			},
 			borderRadius: {
@@ -142,7 +154,9 @@ export default {
 			},
 			fontFamily: {
 				sans: ['Inter', 'sans-serif'],
-				mono: ['JetBrains Mono', 'monospace']
+				mono: ['JetBrains Mono', 'monospace'],
+				mincho: ['"Noto Serif JP"', 'serif'], // 日本語の明朝体
+				gothic: ['"Noto Sans JP"', 'sans-serif'], // 日本語のゴシック体
 			},
 			backdropFilter: {
 				'none': 'none',

@@ -23,7 +23,7 @@ function App() {
   };
 
   return (
-    <ThemeProvider defaultTheme="light">
+    <ThemeProvider defaultTheme="dark">
       <Router>
         <Routes>
           <Route path="/" element={<Index />} />

@@ -11,7 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BookText, Route, Layout, Film, UserCircle, Clock, ArrowRight, Info, FileText, Sparkles } from 'lucide-react';
+import { BookText, Route, Layout, Film, UserCircle, Clock, ArrowRight, Info, FileText, Sparkles, Brush } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface NodeDetailPanelProps {
@@ -153,7 +153,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
   
   if (!selectedNode) {
     return (
-      <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400 text-sm">
+      <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400 text-sm font-mincho">
         <p>ノードを選択してください</p>
       </div>
     );
@@ -162,67 +162,67 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
   const hasContent = selectedNode.data.content && String(selectedNode.data.content).trim().length > 0;
   
   return (
-    <div className="h-full flex flex-col overflow-hidden">
-      <div className="flex items-center p-4 pb-2">
+    <div className="h-full flex flex-col overflow-hidden japanese-card dark:bg-black/40">
+      <div className="flex items-center p-4 pb-2 japanese-header">
         {getNodeIcon()}
-        <h3 className="text-lg font-medium">{getNodeTypeLabel()} の詳細</h3>
+        <h3 className="text-lg font-medium font-mincho">{getNodeTypeLabel()} の詳細</h3>
         {hasContent && (
           <div className="ml-auto flex items-center gap-1">
-            <FileText className="h-4 w-4 text-green-600 dark:text-green-500" />
-            <span className="text-xs text-green-600 dark:text-green-500">執筆済み</span>
+            <Brush className="h-4 w-4 text-japan-vermilion dark:text-japan-sakura" />
+            <span className="text-xs text-japan-vermilion dark:text-japan-sakura font-gothic">執筆済み</span>
           </div>
         )}
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-        <TabsList className="px-4">
-          <TabsTrigger value="info" className="flex items-center gap-1">
+        <TabsList className="px-4 bg-transparent">
+          <TabsTrigger value="info" className="flex items-center gap-1 font-gothic">
             <Info className="h-4 w-4" />
             基本情報
           </TabsTrigger>
-          <TabsTrigger value="content" className="flex items-center gap-1">
+          <TabsTrigger value="content" className="flex items-center gap-1 font-gothic">
             <FileText className="h-4 w-4" />
             コンテンツ
-            {hasContent && <span className="ml-1 w-2 h-2 bg-green-500 rounded-full"></span>}
+            {hasContent && <span className="ml-1 w-2 h-2 bg-japan-vermilion dark:bg-japan-sakura rounded-full"></span>}
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="info" className="flex-1 overflow-hidden px-4 pt-2 pb-4">
+        <TabsContent value="info" className="flex-1 overflow-hidden px-4 pt-2 pb-4 mt-0">
           <ScrollArea className="h-full pr-2">
             <div className="grid grid-cols-1 gap-4 mb-4">
               <div>
-                <Label htmlFor="node-title">タイトル</Label>
+                <Label htmlFor="node-title" className="font-mincho">タイトル</Label>
                 <Input 
                   id="node-title" 
                   value={title} 
                   onChange={handleTitleChange}
-                  className="mt-1"
+                  className="mt-1 font-gothic"
                 />
               </div>
             </div>
             
             <div className="mb-4">
-              <Label htmlFor="node-description">説明</Label>
+              <Label htmlFor="node-description" className="font-mincho">説明</Label>
               <Textarea 
                 id="node-description" 
                 value={description} 
                 onChange={handleDescriptionChange}
-                className="mt-1 resize-none h-20"
+                className="mt-1 resize-none h-24 font-gothic"
               />
             </div>
             
             {(selectedNode.data.type === 'scene') && (
               <div className="mb-4">
-                <Label className="mb-1 block">物語の局面</Label>
+                <Label className="mb-1 block font-mincho">物語の局面</Label>
                 <Select value={phase} onValueChange={handlePhaseChange}>
-                  <SelectTrigger>
+                  <SelectTrigger className="font-gothic">
                     <SelectValue placeholder="局面を選択..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ki">起 (導入)</SelectItem>
-                    <SelectItem value="sho">承 (展開)</SelectItem>
-                    <SelectItem value="ten">転 (転換)</SelectItem>
-                    <SelectItem value="ketsu">結 (結末)</SelectItem>
+                    <SelectItem value="ki" className="font-gothic">起 (導入)</SelectItem>
+                    <SelectItem value="sho" className="font-gothic">承 (展開)</SelectItem>
+                    <SelectItem value="ten" className="font-gothic">転 (転換)</SelectItem>
+                    <SelectItem value="ketsu" className="font-gothic">結 (結末)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -231,13 +231,13 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
             {(selectedNode.data.type === 'scene' || selectedNode.data.type === 'action') && (
               <div className="mb-4">
                 <div className="flex items-center mb-1">
-                  <Label htmlFor="time-position" className="flex items-center">
+                  <Label htmlFor="time-position" className="flex items-center font-mincho">
                     <Clock className="h-4 w-4 mr-1" />
                     時系列位置
                   </Label>
                   <div className="ml-auto flex items-center">
                     <Info className="h-4 w-4 mr-1 text-gray-400" />
-                    <span className="text-xs text-gray-500 dark:text-gray-400">時系列の順序を表します（並び替えには「タイムライン」のドラッグを使用）</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400 font-gothic">時系列の順序を表します（並び替えには「タイムライン」のドラッグを使用）</span>
                   </div>
                 </div>
                 <div className="mt-2 px-1">
@@ -248,8 +248,9 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
                     max={100}
                     step={1}
                     onValueChange={handleTimePositionChange}
+                    className="dark:bg-black/20"
                   />
-                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1 font-gothic">
                     <span>早い</span>
                     <span>{timePosition}%</span>
                     <span>遅い</span>
@@ -260,16 +261,16 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
           </ScrollArea>
         </TabsContent>
         
-        <TabsContent value="content" className="flex-1 overflow-hidden px-4 pt-2 pb-4">
+        <TabsContent value="content" className="flex-1 overflow-hidden px-4 pt-2 pb-4 mt-0">
           <ScrollArea className="h-full pr-2">
             <div className="mb-4">
               <div className="flex items-center justify-between mb-2">
-                <Label htmlFor="node-content" className="flex items-center">
+                <Label htmlFor="node-content" className="flex items-center font-mincho">
                   <FileText className="h-4 w-4 mr-1" />
                   文章内容
                 </Label>
                 {hasContent && (
-                  <span className="text-xs text-green-600 dark:text-green-500 flex items-center">
+                  <span className="text-xs text-japan-vermilion dark:text-japan-sakura flex items-center font-gothic">
                     <Sparkles className="h-3 w-3 mr-1" />
                     執筆済み
                   </span>
@@ -279,7 +280,7 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
                 id="node-content" 
                 value={content} 
                 onChange={handleContentChange}
-                className="mt-1 resize-none min-h-[calc(100vh-400px)]"
+                className="mt-1 resize-none h-[calc(100vh-220px)] min-h-[200px] font-gothic"
                 placeholder="ここに文章を入力するか、「文章生成」ボタンを使ってAIに文章を生成してもらいましょう。"
               />
             </div>
