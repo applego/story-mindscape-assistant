@@ -20,7 +20,7 @@ import {
   NodePositionChange
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { initialStoryNodes, initialStoryEdges } from './storyTreeData';
+import { initialStoryNodes, initialStoryEdges, dispatchFlowSavedEvent } from './storyTreeData';
 import StoryNode from './nodes/StoryNode';
 import FlowAIAssistant from './FlowAIAssistant';
 import NodeDetailPanel from './NodeDetailPanel';

@@ -7,7 +7,8 @@ import { Separator } from "@/components/ui/separator";
 import { HelpCircle, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeProviderContext } from "@/components/ThemeProvider";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
+import { useProjectStats } from "@/hooks/use-project-stats";
 import {
   Dialog,
   DialogContent,
@@ -19,10 +20,20 @@ import {
 
 const Index = () => {
   const { theme, setTheme } = useContext(ThemeProviderContext);
+  const { updateCharacterCount } = useProjectStats();
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
   };
+  
+  // Update character count from the data
+  useEffect(() => {
+    // Import the character data and update the count
+    import('@/data/characterData').then(module => {
+      const characterData = module.default;
+      updateCharacterCount(characterData.length);
+    });
+  }, [updateCharacterCount]);
 
   return (
     <MainLayout>

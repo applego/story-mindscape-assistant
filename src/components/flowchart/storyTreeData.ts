@@ -23,3 +23,30 @@ export const initialStoryEdges: Edge[] = sampleStoryEdges;
 // For testing, you can replace the above with empty arrays:
 // export const initialStoryNodes: Node<StoryNodeData>[] = [];
 // export const initialStoryEdges: Edge[] = [];
+
+// Helper function to count node types
+export const countNodeTypes = (nodes: Node<StoryNodeData>[]) => {
+  const counts = {
+    story: 0,
+    storyline: 0,
+    sequence: 0,
+    scene: 0,
+    action: 0,
+    total: 0
+  };
+  
+  nodes.forEach(node => {
+    if (node.data.type && counts.hasOwnProperty(node.data.type)) {
+      counts[node.data.type as keyof typeof counts] += 1;
+      counts.total += 1;
+    }
+  });
+  
+  return counts;
+};
+
+// Custom event to notify that flow has been saved
+export const dispatchFlowSavedEvent = () => {
+  const event = new Event('flowSaved');
+  window.dispatchEvent(event);
+};
