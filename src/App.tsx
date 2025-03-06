@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Toaster } from './components/ui/sonner';
 import Index from './pages/Index';
+import Projects from './pages/Projects';
 import NotFound from './pages/NotFound';
 import WelcomeModal from './components/WelcomeModal';
 import { ThemeProvider } from './components/ThemeProvider';
@@ -27,6 +28,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/projects" element={<Projects />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         {showWelcome && <WelcomeModal onClose={handleCloseWelcome} />}

@@ -4,11 +4,12 @@ import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import StoryflowSidebar from "@/components/sidebar/StoryflowSidebar";
 import ChatAssistant from "@/components/chat/ChatAssistant";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Save, Share, Settings, HelpCircle, BookOpen, Users, PanelLeft, Sun, Moon } from "lucide-react";
+import { MessageSquare, Save, Share, Settings, HelpCircle, BookOpen, Users, PanelLeft, Sun, Moon, ArrowLeft } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { ThemeProviderContext } from "@/components/ThemeProvider";
+import { Link } from "react-router-dom";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -49,7 +50,14 @@ const MainLayout = ({ children }: MainLayoutProps) => {
         
         <div className="flex-1 flex flex-col h-full overflow-hidden relative">
           <header className="h-16 border-b flex items-center px-6 bg-white/95 dark:bg-storyflow-dark-gray/95 backdrop-blur-sm sticky top-0 z-10 dark:border-storyflow-dark-border">
-            <h1 className="text-xl font-medium">StoryMindscape</h1>
+            <Link to="/projects" className="mr-2">
+              <Button variant="ghost" size="sm" className="h-8 dark:hover:bg-storyflow-dark-hover dark:text-storyflow-dark-text">
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                プロジェクト一覧
+              </Button>
+            </Link>
+            
+            <h1 className="text-xl font-medium dark:text-storyflow-dark-text">StoryMindscape</h1>
             
             <div className="ml-8 flex items-center gap-2">
               <Button variant="ghost" size="sm" className="h-9 dark:hover:bg-storyflow-dark-hover dark:text-storyflow-dark-text">

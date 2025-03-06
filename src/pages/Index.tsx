@@ -2,6 +2,7 @@
 import MainLayout from "@/layouts/MainLayout";
 import StoryFlowEditor from "@/components/flowchart/StoryFlowEditor";
 import CharacterPanel from "@/components/character/CharacterPanel";
+import IdeaPanel from "@/components/idea/IdeaPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { HelpCircle, Moon, Sun } from "lucide-react";
@@ -30,7 +31,7 @@ const Index = () => {
   useEffect(() => {
     // Import the character data and update the count
     import('@/data/characterData').then(module => {
-      const characterData = module.default;
+      const characterData = module.default || [];
       updateCharacterCount(characterData.length);
     });
   }, [updateCharacterCount]);
@@ -41,9 +42,10 @@ const Index = () => {
         <div className="p-4 pb-0 flex items-center justify-between">
           <Tabs defaultValue="plot" className="w-full h-full">
             <div className="flex items-center justify-between">
-              <TabsList className="grid w-full max-w-md grid-cols-3">
+              <TabsList className="grid w-full max-w-md grid-cols-4">
                 <TabsTrigger value="plot">プロット作成</TabsTrigger>
                 <TabsTrigger value="characters">キャラクター</TabsTrigger>
+                <TabsTrigger value="ideas">アイデア</TabsTrigger>
                 <TabsTrigger value="themes">テーマ設計</TabsTrigger>
               </TabsList>
               
@@ -108,6 +110,10 @@ const Index = () => {
             
             <TabsContent value="characters" className="h-[calc(100vh-140px)]">
               <CharacterPanel />
+            </TabsContent>
+            
+            <TabsContent value="ideas" className="h-[calc(100vh-140px)]">
+              <IdeaPanel />
             </TabsContent>
             
             <TabsContent value="themes" className="h-[calc(100vh-140px)]">
