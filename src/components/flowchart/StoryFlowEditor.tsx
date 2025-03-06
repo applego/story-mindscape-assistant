@@ -84,6 +84,7 @@ const StoryFlowEditorContent = () => {
   const [generatedResults, setGeneratedResults] = useState<{ id: string; content: string }[]>([]);
   
   const reactFlowInstance = useReactFlow();
+  const timelineViewRef = useRef(null);
 
   useEffect(() => {
     try {
@@ -107,6 +108,10 @@ const StoryFlowEditorContent = () => {
       console.error('Error loading author info:', error);
     }
   }, []);
+  
+  useEffect(() => {
+    console.log('Nodes updated, synchronizing with timeline view');
+  }, [nodes]);
   
   const getAllDescendantIds = useCallback((nodeId: string): string[] => {
     const descendants: string[] = [];
@@ -242,6 +247,15 @@ const StoryFlowEditorContent = () => {
   }, []);
   
   const addNewNode = useCallback((type: 'story' | 'storyline' | 'sequence' | 'scene' | 'action', parentId?: string) => {
+    const maxTimePosition = nodes
+      .filter(n => n.data.type === type)
+      .reduce((max, node) => {
+        const pos = typeof node.data.timePosition === 'number' ? node.data.timePosition : 0;
+        return pos > max ? pos : max;
+      }, 0);
+    
+    const newTimePosition = maxTimePosition + 10;
+    
     const newNode: Node<StoryNodeData> = {
       id: `${type}_${Date.now()}`,
       type: 'storyNode',
@@ -252,7 +266,7 @@ const StoryFlowEditorContent = () => {
         title: `新しい${getNodeTypeLabel(type)}`,
         description: '',
         phase: 'ki',
-        timePosition: 0,
+        timePosition: newTimePosition,
         ...(parentId ? { parentId } : {}),
       } as StoryNodeData,
     };
@@ -273,7 +287,7 @@ const StoryFlowEditorContent = () => {
     
     setShowMenu(false);
     toast.success(`新しい${getNodeTypeLabel(type)}を作成しました`);
-  }, [menuPosition, setNodes, setEdges]);
+  }, [menuPosition, setNodes, setEdges, nodes]);
   
   const getNodeTypeLabel = useCallback((type: string) => {
     switch (type) {
@@ -301,6 +315,10 @@ const StoryFlowEditorContent = () => {
         return node;
       });
     });
+    
+    if (newData.title) {
+      console.log(`Node title updated: ${newData.title}`);
+    }
   }, [setNodes]);
   
   const deleteSelectedNode = useCallback(() => {
@@ -401,7 +419,11 @@ const StoryFlowEditorContent = () => {
   
   const handleTimelineNodesUpdate = useCallback((updatedNodes: Node<StoryNodeData>[]) => {
     setNodes(updatedNodes);
-  }, [setNodes]);
+    
+    requestAnimationFrame(() => {
+      reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: false });
+    });
+  }, [setNodes, reactFlowInstance]);
   
   const handleCreatePlot = useCallback((newNodes: Node<StoryNodeData>[]) => {
     const newEdges: Edge[] = [];
@@ -535,7 +557,7 @@ const StoryFlowEditorContent = () => {
           nodeTypes={nodeTypes}
           fitView
           fitViewOptions={{ padding: 0.2 }}
-          className="bg-gray-50"
+          className="bg-gray-50 dark:bg-storyflow-dark-gray"
           style={{ width: '100%', height: '100%' }}
           defaultViewport={{ x: 0, y: 0, zoom: 1 }}
         >
@@ -648,6 +670,7 @@ const StoryFlowEditorContent = () => {
                 borderRadius: '5px',
                 boxShadow: '0 1px 4px rgba(0,0,0,0.2)'
               }}
+              className="dark:bg-storyflow-dark-gray dark:text-storyflow-dark-text"
             >
               <div className="flex flex-col gap-2">
                 <Button size="sm" onClick={() => addNewNode('story')} className="justify-start">
@@ -715,8 +738,9 @@ const StoryFlowEditorContent = () => {
       
       {showTimeline ? (
         <>
-          <div className="h-140 border-t border-gray-200">
+          <div className="h-140 border-t border-gray-200 dark:border-gray-700">
             <TimelineView 
+              ref={timelineViewRef}
               nodes={nodes} 
               onNodeClick={handleTimelineNodeClick}
               selectedNodeId={selectedNode?.id || null}
@@ -724,7 +748,7 @@ const StoryFlowEditorContent = () => {
             />
           </div>
           
-          <div className="h-40 border-t border-gray-200">
+          <div className="h-40 border-t border-gray-200 dark:border-gray-700">
             <NodeDetailPanel
               selectedNode={selectedNode}
               onNodeUpdate={handleNodeUpdate}
@@ -732,7 +756,7 @@ const StoryFlowEditorContent = () => {
           </div>
         </>
       ) : (
-        <div className="h-40 mt-2 border-t border-gray-200">
+        <div className="h-40 mt-2 border-t border-gray-200 dark:border-gray-700">
           <NodeDetailPanel
             selectedNode={selectedNode}
             onNodeUpdate={handleNodeUpdate}

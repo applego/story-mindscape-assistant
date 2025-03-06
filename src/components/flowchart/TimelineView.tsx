@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+
+import React, { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import { Node } from '@xyflow/react';
 import { StoryNodeData } from './storyStructureTypes';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -31,138 +32,148 @@ interface TreeNode {
   isOpen: boolean;
 }
 
-const TimelineView: React.FC<TimelineViewProps> = ({ 
+// forwardRef を使って親コンポーネントから操作できるようにする
+const TimelineView = forwardRef<any, TimelineViewProps>(({ 
   nodes, 
   onNodeClick, 
   selectedNodeId,
   onNodesUpdate 
-}) => {
+}, ref) => {
   const [treeData, setTreeData] = useState<TreeNode[]>([]);
   const [reorderMode, setReorderMode] = useState(false);
   const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'time' | 'writing'>('time');
 
+  // 親コンポーネントに公開するメソッド
+  useImperativeHandle(ref, () => ({
+    refreshTree: () => {
+      setTreeData(buildTree());
+    },
+    getTreeData: () => treeData
+  }));
+
+  // ノードが変更されたらツリー構造を再構築
   useEffect(() => {
-    // ツリー構造を構築
-    const buildTree = () => {
-      // ノードをタイプでグループ化
-      const storyNodes = nodes.filter(node => node.data.type === 'story');
-      const storylineNodes = nodes.filter(node => node.data.type === 'storyline');
-      const sequenceNodes = nodes.filter(node => node.data.type === 'sequence');
-      const sceneNodes = nodes.filter(node => node.data.type === 'scene');
-      const actionNodes = nodes.filter(node => node.data.type === 'action');
-      
-      // ツリーを構築
-      const tree: TreeNode[] = [];
-      
-      // 物語ノードを追加
-      storyNodes.forEach(storyNode => {
-        const storyItem: TreeNode = {
-          id: storyNode.id,
-          node: storyNode,
-          children: [],
-          isOpen: true
-        };
-        
-        // 関連するストーリーラインを追加
-        storylineNodes
-          .filter(node => node.data.parentId === storyNode.id)
-          .sort((a, b) => {
-            // タイムポジションがある場合はそれを使用
-            const aTime = typeof a.data.timePosition === 'number' ? a.data.timePosition : 0;
-            const bTime = typeof b.data.timePosition === 'number' ? b.data.timePosition : 0;
-            if (aTime !== bTime) {
-              return aTime - bTime;
-            }
-            return a.position.x - b.position.x;
-          })
-          .forEach(storylineNode => {
-            const storylineItem: TreeNode = {
-              id: storylineNode.id,
-              node: storylineNode,
-              children: [],
-              isOpen: true
-            };
-            
-            // 関連するシークエンスを追加
-            sequenceNodes
-              .filter(node => node.data.parentId === storylineNode.id)
-              .sort((a, b) => {
-                // タイムポジションがある場合はそれを使用
-                const aTime = typeof a.data.timePosition === 'number' ? a.data.timePosition : 0;
-                const bTime = typeof b.data.timePosition === 'number' ? b.data.timePosition : 0;
-                if (aTime !== bTime) {
-                  return aTime - bTime;
-                }
-                return a.position.x - b.position.x;
-              })
-              .forEach(sequenceNode => {
-                const sequenceItem: TreeNode = {
-                  id: sequenceNode.id,
-                  node: sequenceNode,
-                  children: [],
-                  isOpen: true
-                };
-                
-                // 関連するシーンを追加
-                sceneNodes
-                  .filter(node => node.data.parentId === sequenceNode.id)
-                  .sort((a, b) => {
-                    // タイムポジションがある場合はそれを使用
-                    const aTime = typeof a.data.timePosition === 'number' ? a.data.timePosition : 0;
-                    const bTime = typeof b.data.timePosition === 'number' ? b.data.timePosition : 0;
-                    if (aTime !== bTime) {
-                      return aTime - bTime;
-                    }
-                    return a.position.x - b.position.x;
-                  })
-                  .forEach(sceneNode => {
-                    const sceneItem: TreeNode = {
-                      id: sceneNode.id,
-                      node: sceneNode,
-                      children: [],
-                      isOpen: true
-                    };
-                    
-                    // 関連するアクションを追加
-                    actionNodes
-                      .filter(node => node.data.parentId === sceneNode.id)
-                      .sort((a, b) => {
-                        // タイムポジションがある場合はそれを使用
-                        const aTime = typeof a.data.timePosition === 'number' ? a.data.timePosition : 0;
-                        const bTime = typeof b.data.timePosition === 'number' ? b.data.timePosition : 0;
-                        if (aTime !== bTime) {
-                          return aTime - bTime;
-                        }
-                        return a.position.x - b.position.x;
-                      })
-                      .forEach(actionNode => {
-                        sceneItem.children.push({
-                          id: actionNode.id,
-                          node: actionNode,
-                          children: [],
-                          isOpen: true
-                        });
-                      });
-                    
-                    sequenceItem.children.push(sceneItem);
-                  });
-                
-                storylineItem.children.push(sequenceItem);
-              });
-            
-            storyItem.children.push(storylineItem);
-          });
-        
-        tree.push(storyItem);
-      });
-      
-      return tree;
-    };
-    
     setTreeData(buildTree());
   }, [nodes]); // nodes依存配列で更新を即時反映
 
+  // ツリー構造を構築する関数
+  const buildTree = () => {
+    // ノードをタイプでグループ化
+    const storyNodes = nodes.filter(node => node.data.type === 'story');
+    const storylineNodes = nodes.filter(node => node.data.type === 'storyline');
+    const sequenceNodes = nodes.filter(node => node.data.type === 'sequence');
+    const sceneNodes = nodes.filter(node => node.data.type === 'scene');
+    const actionNodes = nodes.filter(node => node.data.type === 'action');
+    
+    // ツリーを構築
+    const tree: TreeNode[] = [];
+    
+    // 物語ノードを追加
+    storyNodes.forEach(storyNode => {
+      const storyItem: TreeNode = {
+        id: storyNode.id,
+        node: storyNode,
+        children: [],
+        isOpen: true
+      };
+      
+      // 関連するストーリーラインを追加
+      storylineNodes
+        .filter(node => node.data.parentId === storyNode.id)
+        .sort((a, b) => {
+          // タイムポジションがある場合はそれを使用
+          const aTime = typeof a.data.timePosition === 'number' ? a.data.timePosition : 0;
+          const bTime = typeof b.data.timePosition === 'number' ? b.data.timePosition : 0;
+          if (aTime !== bTime) {
+            return aTime - bTime;
+          }
+          return a.position.x - b.position.x;
+        })
+        .forEach(storylineNode => {
+          const storylineItem: TreeNode = {
+            id: storylineNode.id,
+            node: storylineNode,
+            children: [],
+            isOpen: true
+          };
+          
+          // 関連するシークエンスを追加
+          sequenceNodes
+            .filter(node => node.data.parentId === storylineNode.id)
+            .sort((a, b) => {
+              // タイムポジションがある場合はそれを使用
+              const aTime = typeof a.data.timePosition === 'number' ? a.data.timePosition : 0;
+              const bTime = typeof b.data.timePosition === 'number' ? b.data.timePosition : 0;
+              if (aTime !== bTime) {
+                return aTime - bTime;
+              }
+              return a.position.x - b.position.x;
+            })
+            .forEach(sequenceNode => {
+              const sequenceItem: TreeNode = {
+                id: sequenceNode.id,
+                node: sequenceNode,
+                children: [],
+                isOpen: true
+              };
+              
+              // 関連するシーンを追加
+              sceneNodes
+                .filter(node => node.data.parentId === sequenceNode.id)
+                .sort((a, b) => {
+                  // タイムポジションがある場合はそれを使用
+                  const aTime = typeof a.data.timePosition === 'number' ? a.data.timePosition : 0;
+                  const bTime = typeof b.data.timePosition === 'number' ? b.data.timePosition : 0;
+                  if (aTime !== bTime) {
+                    return aTime - bTime;
+                  }
+                  return a.position.x - b.position.x;
+                })
+                .forEach(sceneNode => {
+                  const sceneItem: TreeNode = {
+                    id: sceneNode.id,
+                    node: sceneNode,
+                    children: [],
+                    isOpen: true
+                  };
+                  
+                  // 関連するアクションを追加
+                  actionNodes
+                    .filter(node => node.data.parentId === sceneNode.id)
+                    .sort((a, b) => {
+                      // タイムポジションがある場合はそれを使用
+                      const aTime = typeof a.data.timePosition === 'number' ? a.data.timePosition : 0;
+                      const bTime = typeof b.data.timePosition === 'number' ? b.data.timePosition : 0;
+                      if (aTime !== bTime) {
+                        return aTime - bTime;
+                      }
+                      return a.position.x - b.position.x;
+                    })
+                    .forEach(actionNode => {
+                      sceneItem.children.push({
+                        id: actionNode.id,
+                        node: actionNode,
+                        children: [],
+                        isOpen: true
+                      });
+                    });
+                  
+                  sequenceItem.children.push(sceneItem);
+                });
+              
+              storylineItem.children.push(sequenceItem);
+            });
+          
+          storyItem.children.push(storylineItem);
+        });
+      
+      tree.push(storyItem);
+    });
+    
+    return tree;
+  };
+  
   const toggleNode = (nodeId: string) => {
     const updateNodeOpenState = (items: TreeNode[]): TreeNode[] => {
       return items.map(item => {
@@ -436,6 +447,9 @@ const TimelineView: React.FC<TimelineViewProps> = ({
       </ScrollArea>
     </div>
   );
-};
+});
+
+// 関数コンポーネントの表示名を設定
+TimelineView.displayName = 'TimelineView';
 
 export default TimelineView;
