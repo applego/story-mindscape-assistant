@@ -11,7 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BookText, Route, Layout, Film, UserCircle, Clock, ArrowRight, Info, FileText, Sparkles, Brush } from 'lucide-react';
+import { BookText, Route, Layout, Film, UserCircle, Clock, ArrowRight, Info, FileText, Sparkles, Brush, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface NodeDetailPanelProps {
@@ -28,6 +28,11 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
   const [phase, setPhase] = useState<StoryPhase>('ki');
   const [timePosition, setTimePosition] = useState<number>(0);
   const [activeTab, setActiveTab] = useState('info');
+  
+  // 読者がページをめくる理由のフック
+  const [futureHook, setFutureHook] = useState('');
+  const [pastHook, setPastHook] = useState('');
+  const [presentHook, setPresentHook] = useState('');
   
   useEffect(() => {
     if (selectedNode) {
@@ -56,6 +61,11 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
         setTimePosition(0);
       }
       
+      // 読者フックのデータをロード
+      setFutureHook(selectedNode.data.futureHook || '');
+      setPastHook(selectedNode.data.pastHook || '');
+      setPresentHook(selectedNode.data.presentHook || '');
+      
       // コンテンツがあるノードの場合、自動的にコンテンツタブを表示
       if ('content' in selectedNode.data && selectedNode.data.content) {
         setActiveTab('content');
@@ -70,6 +80,9 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
       setCharacters([]);
       setPhase('ki');
       setTimePosition(0);
+      setFutureHook('');
+      setPastHook('');
+      setPresentHook('');
       setActiveTab('info');
     }
   }, [selectedNode]);
@@ -108,6 +121,28 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
     setTimePosition(newValue);
     if (selectedNode && (selectedNode.data.type === 'scene' || selectedNode.data.type === 'action')) {
       onNodeUpdate(selectedNode.id, { timePosition: newValue } as any);
+    }
+  };
+  
+  // 読者フックのハンドラー
+  const handleFutureHookChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setFutureHook(e.target.value);
+    if (selectedNode) {
+      onNodeUpdate(selectedNode.id, { futureHook: e.target.value });
+    }
+  };
+  
+  const handlePastHookChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setPastHook(e.target.value);
+    if (selectedNode) {
+      onNodeUpdate(selectedNode.id, { pastHook: e.target.value });
+    }
+  };
+  
+  const handlePresentHookChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setPresentHook(e.target.value);
+    if (selectedNode) {
+      onNodeUpdate(selectedNode.id, { presentHook: e.target.value });
     }
   };
   
@@ -184,6 +219,10 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
             <FileText className="h-4 w-4" />
             コンテンツ
             {hasContent && <span className="ml-1 w-2 h-2 bg-japan-vermilion dark:bg-japan-sakura rounded-full"></span>}
+          </TabsTrigger>
+          <TabsTrigger value="hooks" className="flex items-center gap-1 font-gothic">
+            <Eye className="h-4 w-4" />
+            読者フック
           </TabsTrigger>
         </TabsList>
         
@@ -283,6 +322,73 @@ const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({ selectedNode, onNodeU
                 className="mt-1 resize-none h-[calc(100vh-220px)] min-h-[200px] font-gothic"
                 placeholder="ここに文章を入力するか、「文章生成」ボタンを使ってAIに文章を生成してもらいましょう。"
               />
+            </div>
+          </ScrollArea>
+        </TabsContent>
+        
+        <TabsContent value="hooks" className="flex-1 overflow-hidden px-4 pt-2 pb-4 mt-0">
+          <ScrollArea className="h-full pr-2">
+            <div className="mb-4">
+              <Label htmlFor="future-hook" className="flex items-center font-mincho mb-1">
+                <span className="text-blue-600 dark:text-blue-400 font-bold mr-1">1.</span>
+                未来が気になる
+              </Label>
+              <Textarea 
+                id="future-hook" 
+                value={futureHook} 
+                onChange={handleFutureHookChange}
+                className="mt-1 resize-none h-20 font-gothic"
+                placeholder="このシーン/キャラクターの次に何が起こるのか気になるポイントは？"
+              />
+            </div>
+            
+            <div className="mb-4">
+              <Label htmlFor="past-hook" className="flex items-center font-mincho mb-1">
+                <span className="text-green-600 dark:text-green-400 font-bold mr-1">2.</span>
+                過去が気になる
+              </Label>
+              <Textarea 
+                id="past-hook" 
+                value={pastHook} 
+                onChange={handlePastHookChange}
+                className="mt-1 resize-none h-20 font-gothic"
+                placeholder="このシーン/キャラクターの背景や過去について気になる点は？"
+              />
+            </div>
+            
+            <div className="mb-4">
+              <Label htmlFor="present-hook" className="flex items-center font-mincho mb-1">
+                <span className="text-yellow-600 dark:text-yellow-400 font-bold mr-1">3.</span>
+                現在起きていることが気になる
+              </Label>
+              <Textarea 
+                id="present-hook" 
+                onChange={handlePresentHookChange}
+                value={presentHook} 
+                className="mt-1 resize-none h-20 font-gothic"
+                placeholder="今まさに起きている状況で読者が気になるポイントは？"
+              />
+            </div>
+            
+            <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md">
+              <h4 className="font-mincho text-sm mb-2">読者がページをめくる理由</h4>
+              <p className="text-xs text-gray-600 dark:text-gray-300 font-gothic mb-2">
+                読者がストーリーに引き込まれる理由を3つの時間軸で考えると効果的です。
+              </p>
+              <ul className="text-xs text-gray-600 dark:text-gray-300 space-y-1 font-gothic">
+                <li className="flex">
+                  <span className="text-blue-600 dark:text-blue-400 font-bold mr-1">1.</span>
+                  <span>未来が気になる - 「次に何が起こるのか」が気になり、先を読みたくなる</span>
+                </li>
+                <li className="flex">
+                  <span className="text-green-600 dark:text-green-400 font-bold mr-1">2.</span>
+                  <span>過去が気になる - 「なぜこうなったのか」背景や伏線が気になる</span>
+                </li>
+                <li className="flex">
+                  <span className="text-yellow-600 dark:text-yellow-400 font-bold mr-1">3.</span>
+                  <span>現在が気になる - 「今まさに」起きていることの行方が気になる</span>
+                </li>
+              </ul>
             </div>
           </ScrollArea>
         </TabsContent>

@@ -16,6 +16,11 @@ export interface StoryNodeBase {
   notes?: string;
   timePosition?: number; // 時系列上の位置（0-100の値）
   writingOrder?: number; // 執筆順の位置
+  setting?: string; // 舞台設定
+  purpose?: string; // 目的
+  futureHook?: string; // 未来への興味
+  pastHook?: string; // 過去への興味
+  presentHook?: string; // 現在への興味
   [key: string]: unknown; // インデックスシグネチャを追加
 }
 

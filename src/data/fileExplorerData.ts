@@ -151,6 +151,14 @@ const createCharacterWritingPrompt = (characters: Character[]): string => {
   return content;
 };
 
+// 読者がページをめくる理由のテンプレート
+const getReaderHookTemplate = (title: string): string => {
+  return `## 読者がページをめくる理由\n\n` +
+         `### 1. 未来が気になる\n${title}の後に何が起こるのか知りたいと思わせる。\n\n` +
+         `### 2. 過去が気になる\n${title}に至るまでの背景や伏線が気になる。\n\n` +
+         `### 3. 現在起きていることが気になる\n${title}で今まさに展開される状況の行方が気になる。`;
+};
+
 // プロットノードからファイルツリーを更新する関数
 export const syncPlotNodesToFileTree = (nodes: Node<StoryNodeData>[]): void => {
   // 現在のファイルツリーを取得
@@ -170,7 +178,7 @@ export const syncPlotNodesToFileTree = (nodes: Node<StoryNodeData>[]): void => {
     if (!chapterFolder) {
       chapterFolder = {
         id: `folder-chapter-${chapter.id}`,
-        name: chapter.data.title,
+        name: chapter.data.title || '無題の章',
         type: 'folder',
         children: []
       };
@@ -187,11 +195,8 @@ export const syncPlotNodesToFileTree = (nodes: Node<StoryNodeData>[]): void => {
         id: `file-prompt-${chapter.id}`,
         name: '執筆プロンプト.md',
         type: 'file',
-        content: `# ${chapter.data.title}の執筆プロンプト\n\n` +
-                '## 読者がページをめくる理由\n\n' +
-                '### 1. 未来が気になる\n読者は次に何が起こるのか知りたいと思っています。\n\n' +
-                '### 2. 過去が気になる\nキャラクターの過去や背景が気になります。\n\n' +
-                '### 3. 現在起きていることが気になる\n今まさに展開されている状況が気になります。\n\n' +
+        content: `# ${chapter.data.title || '無題の章'}の執筆プロンプト\n\n` +
+                `${getReaderHookTemplate(chapter.data.title || '無題の章')}\n\n` +
                 '## シーン執筆のポイント\n' +
                 `- 使用キャラクター: ${chapter.data.characters?.join(', ') || '未設定'}\n` +
                 `- 舞台設定: ${chapter.data.setting || '未設定'}\n` +
@@ -236,7 +241,7 @@ export const syncPlotNodesToFileTree = (nodes: Node<StoryNodeData>[]): void => {
       if (!sequenceFolder) {
         sequenceFolder = {
           id: `folder-sequence-${sequence.id}`,
-          name: sequence.data.title,
+          name: sequence.data.title || '無題のシークエンス',
           type: 'folder',
           children: []
         };
@@ -253,18 +258,39 @@ export const syncPlotNodesToFileTree = (nodes: Node<StoryNodeData>[]): void => {
           id: `file-sequence-info-${sequence.id}`,
           name: '概要.md',
           type: 'file',
-          content: `# ${sequence.data.title}\n\n` +
+          content: `# ${sequence.data.title || '無題のシークエンス'}\n\n` +
                   `${sequence.data.description || '説明をここに記入してください。'}\n\n` +
                   `## 目的\n${sequence.data.purpose || 'このシークエンスの目的を記入してください。'}\n\n` +
-                  `## 含まれるシーン\n${scenes.map(s => `- ${s.data.title}`).join('\n') || '- シーンはまだありません'}`
+                  `## 含まれるシーン\n${scenes.map(s => `- ${s.data.title || '無題のシーン'}`).join('\n') || '- シーンはまだありません'}`
         };
         sequenceFolder.children = [...(sequenceFolder.children || []), sequenceInfoFile];
+      }
+      
+      // シークエンスの執筆プロンプトを追加
+      let sequencePromptFile = sequenceFolder.children?.find(
+        item => item.type === 'file' && item.name === 'プロンプト.md'
+      );
+      
+      if (!sequencePromptFile) {
+        sequencePromptFile = {
+          id: `file-sequence-prompt-${sequence.id}`,
+          name: 'プロンプト.md',
+          type: 'file',
+          content: `# ${sequence.data.title || '無題のシークエンス'}の執筆プロンプト\n\n` +
+                  `${getReaderHookTemplate(sequence.data.title || '無題のシークエンス')}\n\n` +
+                  `## シークエンスの重要ポイント\n` +
+                  `- 物語上の役割: ${sequence.data.purpose || '未設定'}\n` +
+                  `- 登場キャラクター: ${sequence.data.characters?.join(', ') || '未設定'}\n` +
+                  `- キャラクターの内面: このシークエンスでキャラクターはどう変化するか\n` +
+                  `- 場面転換: 各シーンの接続をスムーズに\n`
+        };
+        sequenceFolder.children = [...(sequenceFolder.children || []), sequencePromptFile];
       }
       
       // シーン毎のファイルを作成
       scenes.forEach(scene => {
         // シーンファイルを検索または作成
-        const sceneFileName = `${scene.data.title}.md`;
+        const sceneFileName = `${scene.data.title || '無題のシーン'}.md`;
         let sceneFile = sequenceFolder.children?.find(
           item => item.type === 'file' && item.name === sceneFileName
         );
@@ -273,7 +299,14 @@ export const syncPlotNodesToFileTree = (nodes: Node<StoryNodeData>[]): void => {
           const sceneContent = scene.data.content || '';
           const sceneDescription = scene.data.description || '';
           
-          const newContent = `# ${scene.data.title}\n\n` +
+          // 起承転結を特定
+          let phaseLabel = '';
+          if (scene.data.phase === 'ki') phaseLabel = '【起】';
+          else if (scene.data.phase === 'sho') phaseLabel = '【承】';
+          else if (scene.data.phase === 'ten') phaseLabel = '【転】';
+          else if (scene.data.phase === 'ketsu') phaseLabel = '【結】';
+          
+          const newContent = `# ${phaseLabel}${scene.data.title || '無題のシーン'}\n\n` +
                             `## 概要\n${sceneDescription}\n\n` +
                             `## 登場キャラクター\n${scene.data.characters?.join(', ') || '未設定'}\n\n` +
                             `## 本文\n${sceneContent}\n\n` +
@@ -282,7 +315,7 @@ export const syncPlotNodesToFileTree = (nodes: Node<StoryNodeData>[]): void => {
                             `- 過去: ${scene.data.pastHook || '未設定'}\n` +
                             `- 現在: ${scene.data.presentHook || '未設定'}`;
           
-          const newSceneFile = {
+          const newSceneFile: FileNode = {
             id: `file-scene-${scene.id}`,
             name: sceneFileName,
             type: 'file',
@@ -293,9 +326,9 @@ export const syncPlotNodesToFileTree = (nodes: Node<StoryNodeData>[]): void => {
         } else if (sceneFile) {
           // 既存のシーンファイルを内容で更新
           const sceneContent = scene.data.content || '';
-          if (sceneContent && !sceneFile.content.includes(sceneContent)) {
+          if (sceneContent && !String(sceneFile.content).includes(sceneContent)) {
             // 現在の内容を保持しつつ、コンテンツセクションを更新
-            const contentSections = sceneFile.content.split('## 本文');
+            const contentSections = String(sceneFile.content).split('## 本文');
             const newContent = contentSections[0] + 
                               `## 本文\n${sceneContent}\n\n` + 
                               (contentSections[1]?.split('## 読者がページをめくる理由')[1] ? 
@@ -387,10 +420,10 @@ export const syncCharactersToFileTree = (characters: Character[]): void => {
       existingFile.content = content;
     } else {
       // 新規ファイルを作成
-      const newFile = {
-        id: `file-character-${character.id}`,
+      const newFile: FileNode = {
+        id: `file-character-${character.id || Date.now().toString()}`,
         name: fileName,
-        type: 'file' as const,
+        type: 'file',
         content: content
       };
       
@@ -407,7 +440,7 @@ export const getContentFromNode = (nodeId: string, nodes: Node<StoryNodeData>[])
   const node = nodes.find(n => n.id === nodeId);
   if (!node) return null;
   
-  return node.data.content || null;
+  return node.data.content as string || null;
 };
 
 // ファイル内容をストーリーノードに反映する
@@ -425,11 +458,11 @@ export const updateNodeFromFile = (file: FileNode, nodes: Node<StoryNodeData>[],
   // ファイル内容からノードデータを更新
   if (nodeType === 'scene') {
     // 本文セクションを抽出
-    const contentMatch = file.content.match(/## 本文\n([\s\S]*?)(\n##|$)/);
+    const contentMatch = String(file.content).match(/## 本文\n([\s\S]*?)(\n##|$)/);
     const content = contentMatch ? contentMatch[1].trim() : '';
     
     // 他のメタデータを抽出（必要に応じて）
-    const descriptionMatch = file.content.match(/## 概要\n([\s\S]*?)(\n##|$)/);
+    const descriptionMatch = String(file.content).match(/## 概要\n([\s\S]*?)(\n##|$)/);
     const description = descriptionMatch ? descriptionMatch[1].trim() : '';
     
     // ノードを更新
