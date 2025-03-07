@@ -1,10 +1,28 @@
+
 import { useSidebar } from "../ui/sidebar";
 import { Button } from "../ui/button";
 import { X } from "lucide-react";
 import ProjectStatusPanel from "./ProjectStatusPanel";
+import FileExplorerView from "../explorer/FileExplorerView";
+import { useEffect, useState } from "react";
+import { FileNode } from "../explorer/FileExplorerView";
+import { getFileTree } from "@/data/fileExplorerData";
+import { toast } from "sonner";
 
 const StoryflowSidebar = () => {
   const { state, toggleSidebar } = useSidebar();
+  const [fileTree, setFileTree] = useState<FileNode[]>([]);
+
+  useEffect(() => {
+    // Load file tree from localStorage or sample data
+    setFileTree(getFileTree());
+  }, []);
+
+  const handleFileSelect = (file: FileNode) => {
+    toast.info(`${file.name} を開きました`);
+    // Here you can implement file content viewing in the main area
+    console.log("Selected file:", file);
+  };
 
   return (
     <div
@@ -19,10 +37,19 @@ const StoryflowSidebar = () => {
         </Button>
       </div>
       
-      <div className="flex-1 overflow-auto p-4 space-y-6">
-        <ProjectStatusPanel />
+      <div className="flex-1 overflow-auto flex flex-col">
+        {/* Project Status Panel - takes about 1/3 of the sidebar height */}
+        <div className="border-b border-gray-200 dark:border-gray-700">
+          <ProjectStatusPanel />
+        </div>
         
-        {/* Other sidebar content can be added here */}
+        {/* File Explorer - takes about 2/3 of the sidebar height */}
+        <div className="flex-1 min-h-0">
+          <FileExplorerView 
+            initialData={fileTree} 
+            onFileSelect={handleFileSelect}
+          />
+        </div>
       </div>
     </div>
   );
