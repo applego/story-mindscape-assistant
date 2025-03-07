@@ -6,7 +6,7 @@ import ProjectStatusPanel from "./ProjectStatusPanel";
 import FileExplorerView from "../explorer/FileExplorerView";
 import { useEffect, useState } from "react";
 import { FileNode } from "../explorer/FileExplorerView";
-import { getFileTree } from "@/data/fileExplorerData";
+import { getFileTree, saveFileTree } from "@/data/fileExplorerData";
 import { toast } from "sonner";
 
 const StoryflowSidebar = () => {
@@ -22,6 +22,11 @@ const StoryflowSidebar = () => {
     toast.info(`${file.name} を開きました`);
     // Here you can implement file content viewing in the main area
     console.log("Selected file:", file);
+  };
+
+  const handleFileTreeChange = (updatedTree: FileNode[]) => {
+    setFileTree(updatedTree);
+    saveFileTree(updatedTree);
   };
 
   return (
@@ -48,6 +53,7 @@ const StoryflowSidebar = () => {
           <FileExplorerView 
             initialData={fileTree} 
             onFileSelect={handleFileSelect}
+            onFileTreeChange={handleFileTreeChange}
           />
         </div>
       </div>

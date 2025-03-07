@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Folder, File, ChevronDown, ChevronRight, Plus, Trash2, FileEdit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import {
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
 import { toast } from 'sonner';
+import { saveFileTree } from '@/data/fileExplorerData';
 
 export interface FileNode {
   id: string;
@@ -23,17 +24,54 @@ export interface FileNode {
 interface FileExplorerViewProps {
   initialData: FileNode[];
   onFileSelect?: (file: FileNode) => void;
+  onFileTreeChange?: (fileTree: FileNode[]) => void;
 }
 
 const FileExplorerView: React.FC<FileExplorerViewProps> = ({ 
   initialData,
-  onFileSelect 
+  onFileSelect,
+  onFileTreeChange 
 }) => {
   const [fileTree, setFileTree] = useState<FileNode[]>(initialData);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [newItemName, setNewItemName] = useState('');
   const [isCreatingIn, setIsCreatingIn] = useState<string | null>(null);
   const [newItemType, setNewItemType] = useState<'file' | 'folder'>('file');
+  
+  // Update fileTree when initialData changes
+  useEffect(() => {
+    setFileTree(initialData);
+  }, [initialData]);
+  
+  // Update parent component when fileTree changes
+  useEffect(() => {
+    if (onFileTreeChange && fileTree.length > 0) {
+      onFileTreeChange(fileTree);
+    }
+  }, [fileTree, onFileTreeChange]);
+
+  // Auto-expand all folders on initial load
+  useEffect(() => {
+    const expandAllFolders = (nodes: FileNode[]) => {
+      nodes.forEach(node => {
+        if (node.type === 'folder') {
+          setExpandedFolders(prev => {
+            const newSet = new Set(prev);
+            newSet.add(node.id);
+            return newSet;
+          });
+          
+          if (node.children) {
+            expandAllFolders(node.children);
+          }
+        }
+      });
+    };
+    
+    if (initialData.length > 0) {
+      expandAllFolders(initialData);
+    }
+  }, [initialData]);
   
   const toggleFolder = (folderId: string) => {
     setExpandedFolders(prev => {
@@ -72,15 +110,16 @@ const FileExplorerView: React.FC<FileExplorerViewProps> = ({
     const newId = `${newItemType}-${Date.now()}`;
     const newItem: FileNode = {
       id: newId,
-      name: newItemName,
+      name: newItemType === 'file' ? `${newItemName}.md` : newItemName,
       type: newItemType,
       children: newItemType === 'folder' ? [] : undefined,
-      content: newItemType === 'file' ? '' : undefined
+      content: newItemType === 'file' ? `# ${newItemName}\n\n内容を入力してください。` : undefined
     };
     
     // Root level
     if (isCreatingIn === 'root') {
-      setFileTree([...fileTree, newItem]);
+      const updatedTree = [...fileTree, newItem];
+      setFileTree(updatedTree);
       setIsCreatingIn(null);
       toast.success(`${newItemType === 'folder' ? 'フォルダ' : 'ファイル'}を作成しました`);
       return;
@@ -107,7 +146,8 @@ const FileExplorerView: React.FC<FileExplorerViewProps> = ({
       });
     };
     
-    setFileTree(updateTree(fileTree));
+    const updatedTree = updateTree(fileTree);
+    setFileTree(updatedTree);
     setIsCreatingIn(null);
     
     // Automatically expand the folder when adding a new item
@@ -137,7 +177,8 @@ const FileExplorerView: React.FC<FileExplorerViewProps> = ({
       });
     };
     
-    setFileTree(removeItem(fileTree));
+    const updatedTree = removeItem(fileTree);
+    setFileTree(updatedTree);
     toast.success('削除しました');
   };
   

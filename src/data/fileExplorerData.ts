@@ -4,33 +4,53 @@ import { FileNode } from '@/components/explorer/FileExplorerView';
 export const sampleFileTree: FileNode[] = [
   {
     id: 'folder-1',
-    name: '第一章',
+    name: '第一章：出会い',
     type: 'folder',
     children: [
       {
-        id: 'file-1',
-        name: '主人公の紹介.md',
-        type: 'file',
-        content: '# 主人公の紹介\n\n山田太郎は28歳のプログラマー。趣味は読書と散歩。'
+        id: 'folder-1-1',
+        name: 'シークエンス',
+        type: 'folder',
+        children: [
+          {
+            id: 'file-1-1-1',
+            name: 'シーン',
+            type: 'file',
+            content: '# シーン\n\n主人公と相手が出会うシーン。詳細をここに記述します。'
+          }
+        ]
       },
       {
-        id: 'file-2',
-        name: '冒険の始まり.md',
+        id: 'file-1-2',
+        name: '第一章の構想.md',
         type: 'file',
-        content: '# 冒険の始まり\n\n太郎は普段通りの朝を迎えたが、メールボックスには奇妙な招待状が届いていた。'
+        content: '# 第一章の構想\n\n主人公が冒険の世界に踏み出す最初の一歩。出会いと旅立ちのテーマを扱います。'
       }
     ]
   },
   {
     id: 'folder-2',
-    name: '第二章',
+    name: '第二章：試練',
     type: 'folder',
     children: [
       {
-        id: 'file-3',
-        name: '謎の人物.md',
-        type: 'file',
-        content: '# 謎の人物\n\n黒いスーツを着た男性が太郎に近づいてきた。「お待ちしておりました」と彼は言った。'
+        id: 'folder-2-1',
+        name: 'シークエンス',
+        type: 'folder',
+        children: [
+          {
+            id: 'file-2-1-1',
+            name: 'シーン1',
+            type: 'file',
+            content: '# シーン1\n\n主人公が最初の試練に直面するシーン。'
+          },
+          {
+            id: 'file-2-1-2',
+            name: 'シーン2',
+            type: 'file',
+            content: '# シーン2\n\n試練を乗り越えるために奮闘するシーン。'
+          }
+        ]
       }
     ]
   },
@@ -40,16 +60,16 @@ export const sampleFileTree: FileNode[] = [
     type: 'folder',
     children: [
       {
-        id: 'file-4',
-        name: '山田太郎.md',
+        id: 'file-3-1',
+        name: '主人公.md',
         type: 'file',
-        content: '# 山田太郎\n\n- 年齢: 28歳\n- 職業: プログラマー\n- 性格: 慎重だが好奇心旺盛'
+        content: '# 主人公\n\n- 年齢: 25歳\n- 職業: 冒険者\n- 性格: 好奇心旺盛で勇敢\n- 目的: 失われた宝物を見つけること'
       },
       {
-        id: 'file-5',
-        name: '鈴木花子.md',
+        id: 'file-3-2',
+        name: '相棒.md',
         type: 'file',
-        content: '# 鈴木花子\n\n- 年齢: 25歳\n- 職業: デザイナー\n- 性格: 社交的で明るい'
+        content: '# 相棒\n\n- 年齢: 28歳\n- 職業: 魔法使い\n- 性格: 冷静沈着だが内に熱い情熱を秘めている\n- 能力: 風と水の魔法を操る'
       }
     ]
   }
