@@ -1,9 +1,10 @@
 
 import React, { useEffect, useState } from 'react';
-import { Folder, File, ChevronDown, ChevronRight, Plus, Trash2, FileEdit } from 'lucide-react';
+import { Folder, File, ChevronDown, ChevronRight, Plus, Trash2, FileEdit, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   ContextMenu,
   ContextMenuContent,
@@ -23,20 +24,25 @@ export interface FileNode {
 
 interface FileExplorerViewProps {
   initialData: FileNode[];
+  selectedFile?: FileNode | null;
   onFileSelect?: (file: FileNode) => void;
   onFileTreeChange?: (fileTree: FileNode[]) => void;
+  onFileContentChange?: (fileId: string, newContent: string) => void;
 }
 
 const FileExplorerView: React.FC<FileExplorerViewProps> = ({ 
   initialData,
+  selectedFile,
   onFileSelect,
-  onFileTreeChange 
+  onFileTreeChange,
+  onFileContentChange
 }) => {
   const [fileTree, setFileTree] = useState<FileNode[]>(initialData);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [newItemName, setNewItemName] = useState('');
   const [isCreatingIn, setIsCreatingIn] = useState<string | null>(null);
   const [newItemType, setNewItemType] = useState<'file' | 'folder'>('file');
+  const [editingContent, setEditingContent] = useState('');
   
   // Update fileTree when initialData changes
   useEffect(() => {
@@ -72,6 +78,13 @@ const FileExplorerView: React.FC<FileExplorerViewProps> = ({
       expandAllFolders(initialData);
     }
   }, [initialData]);
+  
+  // 選択されたファイルを編集する場合、そのコンテンツを取得
+  useEffect(() => {
+    if (selectedFile && selectedFile.type === 'file') {
+      setEditingContent(selectedFile.content || '');
+    }
+  }, [selectedFile]);
   
   const toggleFolder = (folderId: string) => {
     setExpandedFolders(prev => {
@@ -182,6 +195,42 @@ const FileExplorerView: React.FC<FileExplorerViewProps> = ({
     toast.success('削除しました');
   };
   
+  // ファイル内容の編集を保存
+  const handleSaveContent = () => {
+    if (selectedFile && onFileContentChange) {
+      onFileContentChange(selectedFile.id, editingContent);
+      toast.success('ファイル内容を保存しました');
+    }
+  };
+  
+  const renderFileContent = () => {
+    if (!selectedFile || selectedFile.type !== 'file') return null;
+    
+    return (
+      <div className="border-t border-gray-200 dark:border-gray-700 p-2">
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-sm font-medium">ファイル編集: {selectedFile.name}</h3>
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSaveContent}
+              className="h-7 flex items-center"
+            >
+              <Save className="h-3.5 w-3.5 mr-1" />
+              保存
+            </Button>
+          </div>
+        </div>
+        <Textarea
+          value={editingContent}
+          onChange={(e) => setEditingContent(e.target.value)}
+          className="h-40 text-xs font-mono resize-none"
+        />
+      </div>
+    );
+  };
+  
   const renderTree = (nodes: FileNode[], level = 0) => {
     return nodes.map(node => (
       <div key={node.id} style={{ paddingLeft: `${level * 12}px` }}>
@@ -190,7 +239,7 @@ const FileExplorerView: React.FC<FileExplorerViewProps> = ({
             <div 
               className={`flex items-center py-1 px-2 rounded-md text-sm hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer ${
                 node.type === 'file' ? 'text-gray-700 dark:text-gray-300' : 'font-medium text-gray-800 dark:text-gray-200'
-              }`}
+              } ${selectedFile && selectedFile.id === node.id ? 'bg-blue-100 dark:bg-blue-900' : ''}`}
             >
               {node.type === 'folder' && (
                 <button 
@@ -351,6 +400,8 @@ const FileExplorerView: React.FC<FileExplorerViewProps> = ({
           )}
         </div>
       </ScrollArea>
+      
+      {selectedFile && renderFileContent()}
     </div>
   );
 };

@@ -6,7 +6,7 @@ import ProjectStatusPanel from "./ProjectStatusPanel";
 import FileExplorerView from "../explorer/FileExplorerView";
 import { useEffect, useState } from "react";
 import { FileNode } from "../explorer/FileExplorerView";
-import { getFileTree, saveFileTree, syncPlotNodesToFileTree } from "@/data/fileExplorerData";
+import { getFileTree, saveFileTree, syncPlotNodesToFileTree, updateNodeFromFile } from "@/data/fileExplorerData";
 import { toast } from "sonner";
 import { Node } from "@xyflow/react";
 import { StoryNodeData } from "../flowchart/storyStructureTypes";
@@ -15,6 +15,7 @@ const StoryflowSidebar = () => {
   const { state, toggleSidebar } = useSidebar();
   const [fileTree, setFileTree] = useState<FileNode[]>([]);
   const [flowNodes, setFlowNodes] = useState<Node<StoryNodeData>[]>([]);
+  const [selectedFile, setSelectedFile] = useState<FileNode | null>(null);
 
   // ファイルツリーとフローノードの初期ロード
   useEffect(() => {
@@ -65,14 +66,82 @@ const StoryflowSidebar = () => {
   }, [flowNodes]);
 
   const handleFileSelect = (file: FileNode) => {
+    setSelectedFile(file);
     toast.info(`${file.name} を開きました`);
-    // Here you can implement file content viewing in the main area
+    
+    // メインエディタにファイル内容を表示（仮実装）
     console.log("Selected file:", file);
+    
+    // ファイルからノードを更新（双方向同期）
+    if (file.id.startsWith('file-scene-')) {
+      updateNodeFromFile(file, flowNodes, (updatedNodes) => {
+        setFlowNodes(updatedNodes);
+        // ローカルストレージも更新
+        try {
+          const savedFlow = localStorage.getItem('storyflow');
+          if (savedFlow) {
+            const flow = JSON.parse(savedFlow);
+            flow.nodes = updatedNodes;
+            localStorage.setItem('storyflow', JSON.stringify(flow));
+            window.dispatchEvent(new Event('flowSaved'));
+          }
+        } catch (error) {
+          console.error('Error updating flow:', error);
+        }
+      });
+    }
   };
 
   const handleFileTreeChange = (updatedTree: FileNode[]) => {
     setFileTree(updatedTree);
     saveFileTree(updatedTree);
+  };
+  
+  const handleFileContentChange = (fileId: string, newContent: string) => {
+    const updatedTree = [...fileTree];
+    
+    // 再帰的にファイルを検索して更新
+    const updateFileContent = (nodes: FileNode[]): boolean => {
+      for (let i = 0; i < nodes.length; i++) {
+        if (nodes[i].id === fileId) {
+          nodes[i].content = newContent;
+          return true;
+        }
+        
+        if (nodes[i].children) {
+          if (updateFileContent(nodes[i].children)) {
+            return true;
+          }
+        }
+      }
+      
+      return false;
+    };
+    
+    if (updateFileContent(updatedTree)) {
+      setFileTree(updatedTree);
+      saveFileTree(updatedTree);
+      
+      // ファイルからノードを更新（双方向同期）
+      if (selectedFile && selectedFile.id === fileId) {
+        const updatedFile = {...selectedFile, content: newContent};
+        updateNodeFromFile(updatedFile, flowNodes, (updatedNodes) => {
+          setFlowNodes(updatedNodes);
+          // ローカルストレージも更新
+          try {
+            const savedFlow = localStorage.getItem('storyflow');
+            if (savedFlow) {
+              const flow = JSON.parse(savedFlow);
+              flow.nodes = updatedNodes;
+              localStorage.setItem('storyflow', JSON.stringify(flow));
+              window.dispatchEvent(new Event('flowSaved'));
+            }
+          } catch (error) {
+            console.error('Error updating flow:', error);
+          }
+        });
+      }
+    }
   };
 
   return (
@@ -100,6 +169,8 @@ const StoryflowSidebar = () => {
             initialData={fileTree} 
             onFileSelect={handleFileSelect}
             onFileTreeChange={handleFileTreeChange}
+            onFileContentChange={handleFileContentChange}
+            selectedFile={selectedFile}
           />
         </div>
       </div>

@@ -29,6 +29,12 @@ export const sampleFileTree: FileNode[] = [
         name: '第一章の構想.md',
         type: 'file',
         content: '# 第一章の構想\n\n主人公が冒険の世界に踏み出す最初の一歩。出会いと旅立ちのテーマを扱います。'
+      },
+      {
+        id: 'file-1-3',
+        name: '執筆プロンプト.md',
+        type: 'file',
+        content: '# 執筆プロンプト\n\n## 読者がページをめくる理由\n\n### 1. 未来が気になる\n読者は次に何が起こるのか知りたいと思っています。\n\n### 2. 過去が気になる\nキャラクターの過去や背景が気になります。\n\n### 3. 現在起きていることが気になる\n今まさに展開されている状況が気になります。\n\n## シーン執筆のポイント\n- 使用キャラクター: 主人公、相棒\n- 舞台設定: 森の入り口\n- 状況: 主人公が初めて冒険に踏み出す場面\n- 狙うべき感情: 緊張と期待'
       }
     ]
   },
@@ -55,6 +61,12 @@ export const sampleFileTree: FileNode[] = [
             content: '# シーン2\n\n試練を乗り越えるために奮闘するシーン。'
           }
         ]
+      },
+      {
+        id: 'file-2-2',
+        name: '執筆プロンプト.md',
+        type: 'file',
+        content: '# 執筆プロンプト\n\n## 読者がページをめくる理由\n\n### 1. 未来が気になる\n読者は主人公が試練を乗り越えられるか知りたいと思っています。\n\n### 2. 過去が気になる\nなぜこの試練が主人公に与えられたのか気になります。\n\n### 3. 現在起きていることが気になる\n試練の真の性質と、それが主人公にもたらす変化が気になります。\n\n## シーン執筆のポイント\n- 使用キャラクター: 主人公、敵対者\n- 舞台設定: 洞窟の奥深く\n- 状況: 主人公が予想外の障害に直面する\n- 狙うべき感情: 恐怖と決意'
       }
     ]
   },
@@ -103,6 +115,42 @@ export const saveFileTree = (fileTree: FileNode[]): void => {
   localStorage.setItem('storyflow-files', JSON.stringify(fileTree));
 };
 
+// 最も長いパスの名前を生成（リネーム防止のため）
+const generateUniqueFileName = (baseName: string, existingNames: string[]): string => {
+  if (!existingNames.includes(baseName)) return baseName;
+  let counter = 1;
+  while (existingNames.includes(`${baseName} (${counter})`)) {
+    counter++;
+  }
+  return `${baseName} (${counter})`;
+};
+
+// キャラクター設定に関連する執筆プロンプトを作成
+const createCharacterWritingPrompt = (characters: Character[]): string => {
+  let content = '# キャラクター執筆プロンプト\n\n';
+  content += '## 主要キャラクター\n\n';
+  
+  characters.forEach(character => {
+    content += `### ${character.name || '名前なし'}\n`;
+    content += `- 性格: ${character.personality || '未設定'}\n`;
+    content += `- 長所: ${character.strengths || '未設定'}\n`;
+    content += `- 短所: ${character.weaknesses || '未設定'}\n`;
+    content += `- 役割: ${character.role || '未設定'}\n\n`;
+  });
+  
+  content += '## 対話執筆のポイント\n';
+  content += '- 各キャラクターの声や話し方の特徴を一貫させる\n';
+  content += '- 対話を通じてキャラクターの関係性を示す\n';
+  content += '- 内面の葛藤を対話の中に織り込む\n\n';
+  
+  content += '## 読者がページをめくる理由\n';
+  content += '1. 未来が気になる - キャラクターが次にどうなるのか\n';
+  content += '2. 過去が気になる - キャラクターの隠された過去\n';
+  content += '3. 現在起きていることが気になる - キャラクター間の緊張関係\n';
+  
+  return content;
+};
+
 // プロットノードからファイルツリーを更新する関数
 export const syncPlotNodesToFileTree = (nodes: Node<StoryNodeData>[]): void => {
   // 現在のファイルツリーを取得
@@ -127,6 +175,30 @@ export const syncPlotNodesToFileTree = (nodes: Node<StoryNodeData>[]): void => {
         children: []
       };
       currentFileTree.push(chapterFolder);
+    }
+    
+    // 執筆プロンプトファイルを確認または作成
+    let promptFile = chapterFolder.children?.find(
+      item => item.type === 'file' && item.name === '執筆プロンプト.md'
+    );
+    
+    if (!promptFile) {
+      promptFile = {
+        id: `file-prompt-${chapter.id}`,
+        name: '執筆プロンプト.md',
+        type: 'file',
+        content: `# ${chapter.data.title}の執筆プロンプト\n\n` +
+                '## 読者がページをめくる理由\n\n' +
+                '### 1. 未来が気になる\n読者は次に何が起こるのか知りたいと思っています。\n\n' +
+                '### 2. 過去が気になる\nキャラクターの過去や背景が気になります。\n\n' +
+                '### 3. 現在起きていることが気になる\n今まさに展開されている状況が気になります。\n\n' +
+                '## シーン執筆のポイント\n' +
+                `- 使用キャラクター: ${chapter.data.characters?.join(', ') || '未設定'}\n` +
+                `- 舞台設定: ${chapter.data.setting || '未設定'}\n` +
+                `- 状況: ${chapter.data.description || '未設定'}\n` +
+                '- 狙うべき感情: 緊張と期待'
+      };
+      chapterFolder.children = [...(chapterFolder.children || []), promptFile];
     }
     
     // シークエンスを取得（この章の子ノード）
@@ -156,22 +228,85 @@ export const syncPlotNodesToFileTree = (nodes: Node<StoryNodeData>[]): void => {
         node => node.data.type === 'scene' && node.data.parentId === sequence.id
       );
       
+      // このシークエンスのフォルダを作成
+      let sequenceFolder = sequencesFolder.children?.find(
+        item => item.type === 'folder' && item.name === sequence.data.title
+      );
+      
+      if (!sequenceFolder) {
+        sequenceFolder = {
+          id: `folder-sequence-${sequence.id}`,
+          name: sequence.data.title,
+          type: 'folder',
+          children: []
+        };
+        sequencesFolder.children = [...(sequencesFolder.children || []), sequenceFolder];
+      }
+      
+      // シークエンス詳細ファイルを追加
+      let sequenceInfoFile = sequenceFolder.children?.find(
+        item => item.type === 'file' && item.name === '概要.md'
+      );
+      
+      if (!sequenceInfoFile) {
+        sequenceInfoFile = {
+          id: `file-sequence-info-${sequence.id}`,
+          name: '概要.md',
+          type: 'file',
+          content: `# ${sequence.data.title}\n\n` +
+                  `${sequence.data.description || '説明をここに記入してください。'}\n\n` +
+                  `## 目的\n${sequence.data.purpose || 'このシークエンスの目的を記入してください。'}\n\n` +
+                  `## 含まれるシーン\n${scenes.map(s => `- ${s.data.title}`).join('\n') || '- シーンはまだありません'}`
+        };
+        sequenceFolder.children = [...(sequenceFolder.children || []), sequenceInfoFile];
+      }
+      
+      // シーン毎のファイルを作成
       scenes.forEach(scene => {
         // シーンファイルを検索または作成
-        const sceneFileName = scene.data.title;
-        const sceneFile = sequencesFolder.children?.find(
-          item => item.type === 'file' && item.name === `${sceneFileName}.md`
+        const sceneFileName = `${scene.data.title}.md`;
+        let sceneFile = sequenceFolder.children?.find(
+          item => item.type === 'file' && item.name === sceneFileName
         );
         
         if (!sceneFile) {
+          const sceneContent = scene.data.content || '';
+          const sceneDescription = scene.data.description || '';
+          
+          const newContent = `# ${scene.data.title}\n\n` +
+                            `## 概要\n${sceneDescription}\n\n` +
+                            `## 登場キャラクター\n${scene.data.characters?.join(', ') || '未設定'}\n\n` +
+                            `## 本文\n${sceneContent}\n\n` +
+                            `## 読者がページをめくる理由\n` +
+                            `- 未来: ${scene.data.futureHook || '未設定'}\n` +
+                            `- 過去: ${scene.data.pastHook || '未設定'}\n` +
+                            `- 現在: ${scene.data.presentHook || '未設定'}`;
+          
           const newSceneFile = {
             id: `file-scene-${scene.id}`,
-            name: `${sceneFileName}.md`,
-            type: 'file' as const,
-            content: `# ${sceneFileName}\n\n${scene.data.description || '説明をここに記入してください。'}\n\n${scene.data.content || ''}`
+            name: sceneFileName,
+            type: 'file',
+            content: newContent
           };
           
-          sequencesFolder.children = [...(sequencesFolder.children || []), newSceneFile];
+          sequenceFolder.children = [...(sequenceFolder.children || []), newSceneFile];
+        } else if (sceneFile) {
+          // 既存のシーンファイルを内容で更新
+          const sceneContent = scene.data.content || '';
+          if (sceneContent && !sceneFile.content.includes(sceneContent)) {
+            // 現在の内容を保持しつつ、コンテンツセクションを更新
+            const contentSections = sceneFile.content.split('## 本文');
+            const newContent = contentSections[0] + 
+                              `## 本文\n${sceneContent}\n\n` + 
+                              (contentSections[1]?.split('## 読者がページをめくる理由')[1] ? 
+                               `## 読者がページをめくる理由${contentSections[1].split('## 読者がページをめくる理由')[1]}` : 
+                               `## 読者がページをめくる理由\n` +
+                               `- 未来: ${scene.data.futureHook || '未設定'}\n` +
+                               `- 過去: ${scene.data.pastHook || '未設定'}\n` +
+                               `- 現在: ${scene.data.presentHook || '未設定'}`);
+            
+            sceneFile.content = newContent;
+          }
         }
       });
     });
@@ -202,6 +337,24 @@ export const syncCharactersToFileTree = (characters: Character[]): void => {
     currentFileTree.push(charactersFolder);
   }
   
+  // キャラクター執筆プロンプトファイルを追加/更新
+  let promptFile = charactersFolder.children?.find(
+    item => item.type === 'file' && item.name === '執筆プロンプト.md'
+  );
+  
+  if (!promptFile) {
+    promptFile = {
+      id: `file-character-prompt`,
+      name: '執筆プロンプト.md',
+      type: 'file',
+      content: createCharacterWritingPrompt(characters)
+    };
+    charactersFolder.children = [...(charactersFolder.children || []), promptFile];
+  } else {
+    // 既存のプロンプトファイルを更新
+    promptFile.content = createCharacterWritingPrompt(characters);
+  }
+  
   // 既存のキャラクターファイル一覧
   const existingCharacterFiles = charactersFolder.children || [];
   
@@ -221,7 +374,13 @@ export const syncCharactersToFileTree = (characters: Character[]): void => {
       `- 長所: ${character.strengths || '未設定'}\n` +
       `- 短所: ${character.weaknesses || '未設定'}\n` +
       `- 背景: ${character.background || '未設定'}\n` +
-      `- 役割: ${character.role || '未設定'}\n`;
+      `- 役割: ${character.role || '未設定'}\n\n` +
+      `## キャラクターの目標\n${character.goal || '未設定'}\n\n` +
+      `## キャラクターの葛藤\n${character.conflict || '未設定'}\n\n` +
+      `## 読者がこのキャラクターに興味を持つ理由\n` +
+      `- 未来への興味: ${character.futureHook || '未設定'}\n` +
+      `- 過去への興味: ${character.pastHook || '未設定'}\n` +
+      `- 現在の状況: ${character.presentHook || '未設定'}`;
     
     if (existingFile) {
       // 既存ファイルの内容を更新
@@ -241,4 +400,51 @@ export const syncCharactersToFileTree = (characters: Character[]): void => {
   
   // 更新したファイルツリーを保存
   saveFileTree(currentFileTree);
+};
+
+// ストーリーノードからファイルの本文を取得
+export const getContentFromNode = (nodeId: string, nodes: Node<StoryNodeData>[]): string | null => {
+  const node = nodes.find(n => n.id === nodeId);
+  if (!node) return null;
+  
+  return node.data.content || null;
+};
+
+// ファイル内容をストーリーノードに反映する
+export const updateNodeFromFile = (file: FileNode, nodes: Node<StoryNodeData>[], setNodes: (nodes: Node<StoryNodeData>[]) => void): void => {
+  // ファイル名からノードIDを抽出（file-scene-{nodeId}などのパターンを想定）
+  const fileIdParts = file.id.split('-');
+  if (fileIdParts.length < 3) return;
+  
+  const nodeType = fileIdParts[1]; // scene, character, etc.
+  const nodeId = fileIdParts.slice(2).join('-'); // 残りの部分をIDとして結合
+  
+  const node = nodes.find(n => n.id === nodeId);
+  if (!node) return;
+  
+  // ファイル内容からノードデータを更新
+  if (nodeType === 'scene') {
+    // 本文セクションを抽出
+    const contentMatch = file.content.match(/## 本文\n([\s\S]*?)(\n##|$)/);
+    const content = contentMatch ? contentMatch[1].trim() : '';
+    
+    // 他のメタデータを抽出（必要に応じて）
+    const descriptionMatch = file.content.match(/## 概要\n([\s\S]*?)(\n##|$)/);
+    const description = descriptionMatch ? descriptionMatch[1].trim() : '';
+    
+    // ノードを更新
+    setNodes(nodes.map(n => {
+      if (n.id === nodeId) {
+        return {
+          ...n,
+          data: {
+            ...n.data,
+            content,
+            description
+          }
+        };
+      }
+      return n;
+    }));
+  }
 };
