@@ -6,17 +6,63 @@ import ProjectStatusPanel from "./ProjectStatusPanel";
 import FileExplorerView from "../explorer/FileExplorerView";
 import { useEffect, useState } from "react";
 import { FileNode } from "../explorer/FileExplorerView";
-import { getFileTree, saveFileTree } from "@/data/fileExplorerData";
+import { getFileTree, saveFileTree, syncPlotNodesToFileTree } from "@/data/fileExplorerData";
 import { toast } from "sonner";
+import { Node } from "@xyflow/react";
+import { StoryNodeData } from "../flowchart/storyStructureTypes";
 
 const StoryflowSidebar = () => {
   const { state, toggleSidebar } = useSidebar();
   const [fileTree, setFileTree] = useState<FileNode[]>([]);
+  const [flowNodes, setFlowNodes] = useState<Node<StoryNodeData>[]>([]);
 
+  // ファイルツリーとフローノードの初期ロード
   useEffect(() => {
-    // Load file tree from localStorage or sample data
+    // ファイルツリーをロード
     setFileTree(getFileTree());
+    
+    // ストーリーフローノードをロード
+    try {
+      const savedFlow = localStorage.getItem('storyflow');
+      if (savedFlow) {
+        const flow = JSON.parse(savedFlow);
+        setFlowNodes(flow.nodes || []);
+      }
+    } catch (error) {
+      console.error('Error loading flow nodes:', error);
+    }
   }, []);
+  
+  // ストーリーフローノードの変更を監視して同期
+  useEffect(() => {
+    const handleFlowSaved = () => {
+      try {
+        const savedFlow = localStorage.getItem('storyflow');
+        if (savedFlow) {
+          const flow = JSON.parse(savedFlow);
+          setFlowNodes(flow.nodes || []);
+        }
+      } catch (error) {
+        console.error('Error handling flow saved event:', error);
+      }
+    };
+
+    window.addEventListener('flowSaved', handleFlowSaved);
+    window.addEventListener('storage', handleFlowSaved);
+    
+    return () => {
+      window.removeEventListener('flowSaved', handleFlowSaved);
+      window.removeEventListener('storage', handleFlowSaved);
+    };
+  }, []);
+  
+  // フローノードが変更されたらファイルツリーを同期
+  useEffect(() => {
+    if (flowNodes.length > 0) {
+      syncPlotNodesToFileTree(flowNodes);
+      setFileTree(getFileTree());
+    }
+  }, [flowNodes]);
 
   const handleFileSelect = (file: FileNode) => {
     toast.info(`${file.name} を開きました`);

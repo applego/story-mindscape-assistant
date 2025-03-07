@@ -347,6 +347,9 @@ const StoryFlowEditorContent = () => {
   const saveFlow = useCallback(() => {
     const flow = reactFlowInstance.toObject();
     localStorage.setItem('storyflow', JSON.stringify(flow));
+    
+    dispatchFlowSavedEvent();
+    
     toast.success('ストーリーフローを保存しました');
     
     localStorage.setItem('authorInfo', JSON.stringify(authorInfo));

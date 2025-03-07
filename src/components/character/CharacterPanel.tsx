@@ -1,21 +1,15 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlusCircle, User, Users, Trash2 } from "lucide-react";
-
-interface Character {
-  id: string;
-  name: string;
-  personality: string;
-  strengths: string;
-  weaknesses: string;
-  background: string;
-  role: string;
-}
+import { syncCharactersToFileTree } from "@/data/fileExplorerData";
+import { useProjectStats } from "@/hooks/use-project-stats";
+import { toast } from "sonner";
+import { Character } from "@/data/characterData";
 
 const CharacterPanel = () => {
   const [characters, setCharacters] = useState<Character[]>([]);
@@ -29,6 +23,30 @@ const CharacterPanel = () => {
     background: '',
     role: ''
   });
+  const { updateCharacterCount } = useProjectStats();
+
+  // ローカルストレージからキャラクターデータをロード
+  useEffect(() => {
+    try {
+      const savedCharacters = localStorage.getItem('characters');
+      if (savedCharacters) {
+        const parsedCharacters = JSON.parse(savedCharacters);
+        setCharacters(parsedCharacters);
+        updateCharacterCount(parsedCharacters.length);
+      }
+    } catch (error) {
+      console.error('Error loading characters:', error);
+    }
+  }, [updateCharacterCount]);
+
+  // キャラクターの変更をファイルエクスプローラーに同期
+  useEffect(() => {
+    if (characters.length > 0) {
+      syncCharactersToFileTree(characters);
+      localStorage.setItem('characters', JSON.stringify(characters));
+      updateCharacterCount(characters.length);
+    }
+  }, [characters, updateCharacterCount]);
 
   const handleCreateCharacter = () => {
     const character: Character = {
@@ -36,7 +54,8 @@ const CharacterPanel = () => {
       id: Date.now().toString()
     };
     
-    setCharacters([...characters, character]);
+    const updatedCharacters = [...characters, character];
+    setCharacters(updatedCharacters);
     setSelectedCharacter(character);
     setIsCreating(false);
     setNewCharacter({
@@ -47,6 +66,8 @@ const CharacterPanel = () => {
       background: '',
       role: ''
     });
+    
+    toast.success('キャラクターを作成しました');
   };
 
   const handleDeleteCharacter = (id: string) => {
@@ -56,6 +77,8 @@ const CharacterPanel = () => {
     if (selectedCharacter?.id === id) {
       setSelectedCharacter(updatedCharacters.length > 0 ? updatedCharacters[0] : null);
     }
+    
+    toast.success('キャラクターを削除しました');
   };
 
   const handleInputChange = (field: keyof Omit<Character, 'id'>, value: string) => {
