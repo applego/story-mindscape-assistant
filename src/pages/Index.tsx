@@ -31,8 +31,8 @@ const Index = () => {
   useEffect(() => {
     // Import the character data and update the count
     import('@/data/characterData').then(module => {
-      const characterData = module.default || [];
-      updateCharacterCount(characterData.length);
+      const { exampleCharacters } = module;
+      updateCharacterCount(exampleCharacters.length);
     });
   }, [updateCharacterCount]);
 
