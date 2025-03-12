@@ -7,6 +7,11 @@ export interface Character {
   weaknesses: string;
   background: string;
   role: string;
+  goal?: string;           // Add this field
+  conflict?: string;       // Add this field
+  futureHook?: string;     // Add this field
+  pastHook?: string;       // Add this field
+  presentHook?: string;    // Add this field
   relationships?: Array<{
     targetId: string;
     type: "friend" | "enemy" | "family" | "romantic" | "mentor" | "other";

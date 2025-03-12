@@ -1,4 +1,3 @@
-
 import { FileNode } from '@/components/explorer/FileExplorerView';
 import { Character } from './characterData';
 import { Node } from '@xyflow/react';
