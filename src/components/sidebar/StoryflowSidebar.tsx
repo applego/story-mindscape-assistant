@@ -65,12 +65,29 @@ const StoryflowSidebar = () => {
     }
   }, [flowNodes]);
 
+  // Listen for file save events from the main editor
+  useEffect(() => {
+    const handleFileSaved = (event: CustomEvent) => {
+      const { fileId, content } = event.detail;
+      handleFileContentChange(fileId, content);
+    };
+
+    window.addEventListener('fileSaved' as any, handleFileSaved);
+    
+    return () => {
+      window.removeEventListener('fileSaved' as any, handleFileSaved);
+    };
+  }, [fileTree]);
+
   const handleFileSelect = (file: FileNode) => {
     setSelectedFile(file);
     toast.info(`${file.name} を開きました`);
     
-    // メインエディタにファイル内容を表示（仮実装）
-    console.log("Selected file:", file);
+    // Dispatch a custom event to notify the main component
+    const event = new CustomEvent('fileSelected', {
+      detail: { file }
+    });
+    window.dispatchEvent(event);
     
     // ファイルからノードを更新（双方向同期）
     if (file.id.startsWith('file-scene-')) {

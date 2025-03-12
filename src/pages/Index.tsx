@@ -1,15 +1,17 @@
 
+import { useContext, useEffect, useState } from "react";
 import MainLayout from "@/layouts/MainLayout";
 import StoryFlowEditor from "@/components/flowchart/StoryFlowEditor";
 import CharacterPanel from "@/components/character/CharacterPanel";
 import IdeaPanel from "@/components/idea/IdeaPanel";
+import FileEditor from "@/components/editor/FileEditor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { HelpCircle, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeProviderContext } from "@/components/ThemeProvider";
-import { useContext, useEffect } from "react";
 import { useProjectStats } from "@/hooks/use-project-stats";
+import { FileNode } from "@/components/explorer/FileExplorerView";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +24,8 @@ import {
 const Index = () => {
   const { theme, setTheme } = useContext(ThemeProviderContext);
   const { updateCharacterCount } = useProjectStats();
+  const [selectedFile, setSelectedFile] = useState<FileNode | null>(null);
+  const [activeTab, setActiveTab] = useState("plot");
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
@@ -36,17 +40,47 @@ const Index = () => {
     });
   }, [updateCharacterCount]);
 
+  useEffect(() => {
+    // Listen for file selection events from the sidebar
+    const handleFileSelected = (event: CustomEvent) => {
+      setSelectedFile(event.detail.file);
+      setActiveTab("editor");
+    };
+
+    window.addEventListener('fileSelected' as any, handleFileSelected);
+    
+    return () => {
+      window.removeEventListener('fileSelected' as any, handleFileSelected);
+    };
+  }, []);
+
+  const handleFileSave = (fileId: string, content: string) => {
+    // Dispatch an event to be handled by the sidebar component
+    const event = new CustomEvent('fileSaved', {
+      detail: { fileId, content }
+    });
+    window.dispatchEvent(event);
+  };
+
+  const handleFileClose = () => {
+    setSelectedFile(null);
+    setActiveTab("plot");
+  };
+
   return (
     <MainLayout>
       <div className="h-full flex flex-col">
         <div className="p-4 pb-0 flex items-center justify-between">
-          <Tabs defaultValue="plot" className="w-full h-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full">
             <div className="flex items-center justify-between">
-              <TabsList className="grid w-full max-w-md grid-cols-4">
+              <TabsList className="grid w-full max-w-md grid-cols-5">
                 <TabsTrigger value="plot">プロット作成</TabsTrigger>
                 <TabsTrigger value="characters">キャラクター</TabsTrigger>
                 <TabsTrigger value="ideas">アイデア</TabsTrigger>
                 <TabsTrigger value="themes">テーマ設計</TabsTrigger>
+                <TabsTrigger value="editor" disabled={!selectedFile}>
+                  {selectedFile ? `編集: ${selectedFile.name}` : "エディタ"}
+                </TabsTrigger>
               </TabsList>
               
               <div className="flex gap-2">
@@ -120,6 +154,14 @@ const Index = () => {
               <div className="flex items-center justify-center h-full bg-gray-50 dark:bg-gray-800 rounded-lg border border-dashed">
                 <p className="text-gray-500 dark:text-gray-400">テーマ設計ツールは開発中です。次のアップデートをお待ちください。</p>
               </div>
+            </TabsContent>
+            
+            <TabsContent value="editor" className="h-[calc(100vh-140px)]">
+              <FileEditor 
+                file={selectedFile} 
+                onSave={handleFileSave}
+                onClose={handleFileClose}
+              />
             </TabsContent>
           </Tabs>
         </div>
