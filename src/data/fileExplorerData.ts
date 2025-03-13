@@ -1,4 +1,3 @@
-
 import { FileNode } from '@/components/explorer/FileExplorerView';
 import { Character } from './characterData';
 import { Node } from '@xyflow/react';
@@ -342,27 +341,27 @@ export const addCharacterToFileTree = (character: Character) => {
   
   if (characterFolder) {
     // キャラクターの詳細情報をMarkdown形式で作成
-    const content = `# ${character.name}\n\n` +
+    let contentStr = `# ${character.name}\n\n` +
       `## 性格\n${character.personality}\n\n` +
       `## 強み（長所）\n${character.strengths}\n\n` +
       `## 弱み（短所）\n${character.weaknesses}\n\n` +
       `## 背景\n${character.background}\n\n` +
-      `## 役割\n${character.role}\n\n` +
-      (character.goal ? `## 目標\n${character.goal}\n\n` : '') +
-      (character.conflict ? `## 葛藤\n${character.conflict}\n\n` : '') +
-      (character.futureHook ? `## 未来へのフック\n${character.futureHook}\n\n` : '') +
-      (character.pastHook ? `## 過去へのフック\n${character.pastHook}\n\n` : '') +
-      (character.presentHook ? `## 現在へのフック\n${character.presentHook}\n\n` : '');
+      `## 役割\n${character.role}\n\n`;
+      
+    // 追加のオプションフィールド
+    if (character.goal) contentStr += `## 目標\n${character.goal}\n\n`;
+    if (character.conflict) contentStr += `## 葛藤\n${character.conflict}\n\n`;
+    if (character.futureHook) contentStr += `## 未来へのフック\n${character.futureHook}\n\n`;
+    if (character.pastHook) contentStr += `## 過去へのフック\n${character.pastHook}\n\n`;
+    if (character.presentHook) contentStr += `## 現在へのフック\n${character.presentHook}\n\n`;
     
     // 関係性の情報があれば追加
     if (character.relationships && character.relationships.length > 0) {
-      let relationshipsContent = `## 関係性\n\n`;
+      contentStr += `## 関係性\n\n`;
       
       character.relationships.forEach(rel => {
-        relationshipsContent += `- **${rel.targetId}**: ${rel.type} - ${rel.description}\n`;
+        contentStr += `- **${rel.targetId}**: ${rel.type} - ${rel.description}\n`;
       });
-      
-      content += relationshipsContent;
     }
     
     // キャラクターファイルを作成
@@ -370,7 +369,7 @@ export const addCharacterToFileTree = (character: Character) => {
       id: `file-character-${character.id}`,
       name: `${character.name}.md`,
       type: 'file',
-      content
+      content: contentStr
     };
     
     // 既存のファイルがあるか確認して更新または追加
@@ -390,6 +389,13 @@ export const addCharacterToFileTree = (character: Character) => {
     // 変更を保存
     saveFileTree(fileTree);
   }
+};
+
+// キャラクターデータをファイルエクスプローラーと同期する（複数キャラクター用）
+export const syncCharactersToFileTree = (characters: Character[]) => {
+  characters.forEach(character => {
+    addCharacterToFileTree(character);
+  });
 };
 
 // 初期のファイルツリーを作成
