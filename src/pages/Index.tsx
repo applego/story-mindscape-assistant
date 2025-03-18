@@ -31,13 +31,20 @@ const Index = () => {
     setTheme(theme === "dark" ? "light" : "dark");
   };
   
-  // Update character count from the data
+  // Update character count from local storage
   useEffect(() => {
-    // Import the character data and update the count
-    import('@/data/characterData').then(module => {
-      const { exampleCharacters } = module;
-      updateCharacterCount(exampleCharacters.length);
-    });
+    try {
+      const savedCharacters = localStorage.getItem('characters');
+      if (savedCharacters) {
+        const characters = JSON.parse(savedCharacters);
+        updateCharacterCount(characters.length);
+      } else {
+        updateCharacterCount(0);
+      }
+    } catch (error) {
+      console.error('Error loading character count:', error);
+      updateCharacterCount(0);
+    }
   }, [updateCharacterCount]);
 
   useEffect(() => {
